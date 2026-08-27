@@ -5,6 +5,8 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
+  Pressable,
+  Image,
 } from "react-native";
 import { Mail, Eye, EyeOff } from "lucide-react-native";
 import { useAuthStore } from "../../store/authStore";
@@ -14,8 +16,7 @@ const MAX_EMAIL_LENGTH = 100;
 const MAX_PHONE_DIGITS = 11;
 const MAX_PASSWORD_LENGTH = 8;
 
-const EMAIL_REGEX =
-  /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState("");
@@ -27,7 +28,7 @@ export default function RegisterScreen({ navigation }) {
   const [validationError, setValidationError] = useState("");
 
   const registerBusinessOwner = useAuthStore(
-    (state) => state.registerBusinessOwner
+    (state) => state.registerBusinessOwner,
   );
 
   const isLoading = useAuthStore((state) => state.isLoading);
@@ -72,9 +73,7 @@ export default function RegisterScreen({ navigation }) {
   // =========================
 
   function formatPhone(value) {
-    const numbers = value
-      .replace(/\D/g, "")
-      .slice(0, MAX_PHONE_DIGITS);
+    const numbers = value.replace(/\D/g, "").slice(0, MAX_PHONE_DIGITS);
 
     if (numbers.length === 0) {
       return "";
@@ -90,7 +89,7 @@ export default function RegisterScreen({ navigation }) {
 
     return `(${numbers.slice(0, 2)}) ${numbers.slice(
       2,
-      7
+      7,
     )}-${numbers.slice(7)}`;
   }
 
@@ -134,9 +133,7 @@ export default function RegisterScreen({ navigation }) {
     }
 
     if (cleanName.length < 3) {
-      setValidationError(
-        "O nome deve ter pelo menos 3 caracteres."
-      );
+      setValidationError("O nome deve ter pelo menos 3 caracteres.");
       return false;
     }
 
@@ -156,9 +153,7 @@ export default function RegisterScreen({ navigation }) {
     }
 
     if (phoneDigits.length !== 11) {
-      setValidationError(
-        "Digite um telefone válido com DDD."
-      );
+      setValidationError("Digite um telefone válido com DDD.");
       return false;
     }
 
@@ -168,16 +163,12 @@ export default function RegisterScreen({ navigation }) {
     }
 
     if (password.length < 4) {
-      setValidationError(
-        "A senha deve ter pelo menos 4 caracteres."
-      );
+      setValidationError("A senha deve ter pelo menos 4 caracteres.");
       return false;
     }
 
     if (password.length > MAX_PASSWORD_LENGTH) {
-      setValidationError(
-        "A senha deve ter no máximo 8 caracteres."
-      );
+      setValidationError("A senha deve ter no máximo 8 caracteres.");
       return false;
     }
 
@@ -220,11 +211,11 @@ export default function RegisterScreen({ navigation }) {
 
   return (
     <View className="flex-1 bg-white px-6 pt-16">
-
       {/* TOGGLE */}
 
       <View className="mb-10 flex-row rounded-full bg-gray-100 p-1">
 
+        
         <TouchableOpacity
           className="flex-1 py-2.5"
           onPress={() => navigation.navigate("Login")}
@@ -240,14 +231,25 @@ export default function RegisterScreen({ navigation }) {
             Inscrever-se
           </Text>
         </View>
-
       </View>
 
       {/* TÍTULO */}
 
+      
+
       <Text className="mb-8 text-center text-2xl font-semibold">
         Criar uma conta
       </Text>
+
+      <Image
+            source={require("../../../assets/img/login.png")}
+            style={{
+             
+              width: "100%",
+              height: 250,
+            }}
+            resizeMode="contain"
+          />
 
       {/* NOME */}
 
@@ -298,7 +300,6 @@ export default function RegisterScreen({ navigation }) {
       {/* SENHA */}
 
       <View className="mb-2 flex-row items-center rounded-xl border border-gray-200 px-4 py-3.5">
-
         <TextInput
           className="flex-1"
           placeholder="Senha"
@@ -315,9 +316,7 @@ export default function RegisterScreen({ navigation }) {
         />
 
         <TouchableOpacity
-          onPress={() =>
-            setShowPassword((previous) => !previous)
-          }
+          onPress={() => setShowPassword((previous) => !previous)}
           disabled={isLoading}
           hitSlop={10}
         >
@@ -327,7 +326,6 @@ export default function RegisterScreen({ navigation }) {
             <Eye size={20} color="#9CA3AF" />
           )}
         </TouchableOpacity>
-
       </View>
 
       {/* CONTADOR DA SENHA */}
@@ -339,17 +337,13 @@ export default function RegisterScreen({ navigation }) {
       {/* ERRO DE VALIDAÇÃO */}
 
       {validationError ? (
-        <Text className="mb-2 text-sm text-red-500">
-          {validationError}
-        </Text>
+        <Text className="mb-2 text-sm text-red-500">{validationError}</Text>
       ) : null}
 
       {/* ERRO DA API */}
 
       {!validationError && error ? (
-        <Text className="mb-2 text-sm text-red-500">
-          {error}
-        </Text>
+        <Text className="mb-2 text-sm text-red-500">{error}</Text>
       ) : null}
 
       {/* BOTÃO */}
@@ -366,16 +360,11 @@ export default function RegisterScreen({ navigation }) {
           <ActivityIndicator color="#fff" />
         ) : (
           <>
-            <Mail
-              size={18}
-              color={canRegister ? "#fff" : "#9CA3AF"}
-            />
+            <Mail size={18} color={canRegister ? "#fff" : "#9CA3AF"} />
 
             <Text
               className={`ml-2 font-semibold ${
-                canRegister
-                  ? "text-white"
-                  : "text-gray-400"
+                canRegister ? "text-white" : "text-gray-400"
               }`}
             >
               Continuar com e-mail
@@ -387,37 +376,25 @@ export default function RegisterScreen({ navigation }) {
       {/* SEPARADOR */}
 
       <View className="my-8 flex-row items-center">
-
         <View className="h-px flex-1 bg-gray-200" />
 
-        <Text className="mx-3 text-xs text-gray-400">
-          OU INSCREVA-SE COM
-        </Text>
+        <Text className="mx-3 text-xs text-gray-400">OU INSCREVA-SE COM GOOGLE</Text>
 
         <View className="h-px flex-1 bg-gray-200" />
-
       </View>
 
       {/* REDES SOCIAIS */}
 
-      <View className="flex-row gap-3">
-
-        <TouchableOpacity
-          disabled
-          className="flex-1 items-center rounded-xl border border-gray-200 py-3.5 opacity-40"
-        >
-          <Text>G</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          disabled
-          className="flex-1 items-center rounded-xl border border-gray-200 py-3.5 opacity-40"
-        >
-          <Text>f</Text>
-        </TouchableOpacity>
-
-      </View>
-
+      <Pressable className="h-14 rounded-2xl bg-neutral-100 flex-row items-center justify-center">
+        <Image
+          source={require("../../../assets/img/google.png")}
+          style={{
+            width: 25,
+            height: 25,
+          }}
+          resizeMode="contain"
+        />
+      </Pressable>
     </View>
   );
 }

@@ -4,6 +4,7 @@ import AgendaScreen from "../screens/agenda/AgendaScreen";
 import CreateAppointmentScreen from "../screens/agenda/CreateAppointmentScreen";
 import CreateTimeBlockScreen from "../screens/agenda/CreateTimeBlockScreen";
 import CreateDayOffScreen from "../screens/agenda/CreateDayOffScreen";
+import SettingsScreen from "../screens/profile/SettingsScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -29,6 +30,11 @@ export default function AgendaStack() {
       <Stack.Screen
         name="CreateDayOff"
         component={CreateDayOffScreen}
+      />
+
+      <Stack.Screen
+        name="BusinessSettingsMenu"
+        component={SettingsScreen}
       />
 
     </Stack.Navigator>

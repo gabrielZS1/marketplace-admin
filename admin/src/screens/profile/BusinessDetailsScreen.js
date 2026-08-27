@@ -25,23 +25,17 @@ import {
   X,
 } from "lucide-react-native";
 
+import { useImagePicker } from "../../hooks/useImagePicker";
 import { businessApi } from "../../api/businessApi";
 
 export default function BusinessDetailsScreen({ navigation }) {
   const [businessId, setBusinessId] = useState(null);
-
   const [business, setBusiness] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // Seção que está sendo editada
   const [editingSection, setEditingSection] = useState(null);
   const [editing, setEditing] = useState(false);
-
-  // Seção aberta
   const [openSection, setOpenSection] = useState("company");
-
   const [saving, setSaving] = useState(false);
-
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -56,6 +50,9 @@ export default function BusinessDetailsScreen({ navigation }) {
     allowsPets: false,
     hasWifi: false,
   });
+  const { pickImage } = useImagePicker();
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   useEffect(() => {
     loadBusiness();
@@ -143,6 +140,39 @@ export default function BusinessDetailsScreen({ navigation }) {
     }
   }
 
+  async function handlePickLogo() {
+    const uri = await pickImage();
+    if (!uri) return;
+
+    try {
+      setUploadingLogo(true);
+      const logoUrl = await businessApi.uploadLogo(businessId, uri);
+      setBusiness((prev) => ({ ...prev, logoUrl }));
+    } catch (error) {
+      Alert.alert("Erro", error.message || "Não foi possível enviar a logo.");
+    } finally {
+      setUploadingLogo(false);
+    }
+  }
+
+  async function handlePickPhoto() {
+    const uri = await pickImage();
+    if (!uri) return;
+
+    try {
+      setUploadingPhoto(true);
+      const photoUrl = await businessApi.uploadPhoto(businessId, uri);
+      setBusiness((prev) => ({
+        ...prev,
+        photos: [...(prev.photos || []), photoUrl],
+      }));
+    } catch (error) {
+      Alert.alert("Erro", error.message || "Não foi possível enviar a foto.");
+    } finally {
+      setUploadingPhoto(false);
+    }
+  }
+
   async function saveSection(section) {
     try {
       setSaving(true);
@@ -218,19 +248,21 @@ export default function BusinessDetailsScreen({ navigation }) {
       >
         {/* RESUMO */}
         <View className="mb-7 mt-4 items-center">
-          <View className="h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-gray-100">
-            {business.logoUrl ? (
-              <Image
-                source={{
-                  uri: business.logoUrl,
-                }}
-                className="h-full w-full"
-                resizeMode="cover"
-              />
-            ) : (
-              <Building2 size={36} color="#999" strokeWidth={1.5} />
-            )}
-          </View>
+          <TouchableOpacity onPress={handlePickLogo} disabled={uploadingLogo}>
+            <View className="h-24 w-24 items-center justify-center overflow-hidden rounded-full bg-gray-100">
+              {uploadingLogo ? (
+                <ActivityIndicator size="small" color="#000" />
+              ) : business.logoUrl ? (
+                <Image
+                  source={{ uri: business.logoUrl }}
+                  className="h-full w-full"
+                  resizeMode="cover"
+                />
+              ) : (
+                <Building2 size={36} color="#999" strokeWidth={1.5} />
+              )}
+            </View>
+          </TouchableOpacity>
 
           <Text className="mt-3 text-[18px] font-bold text-black">
             {business.name || "Sua empresa"}
@@ -291,7 +323,7 @@ export default function BusinessDetailsScreen({ navigation }) {
           />
         </Section>
 
-        {/* FOTOS */}
+            {/* FOTOS */}
         <Section
           title="Fotos e logotipo"
           icon={<Camera size={20} color="#000" />}
@@ -336,12 +368,21 @@ export default function BusinessDetailsScreen({ navigation }) {
           </View>
 
           {editingSection === "photos" && (
-            <TouchableOpacity className="mt-4 flex-row items-center justify-center rounded-xl border border-gray-200 py-3">
-              <Camera size={17} color="#000" />
-
-              <Text className="ml-2 text-[12px] font-semibold text-black">
-                Adicionar foto
-              </Text>
+            <TouchableOpacity
+              onPress={handlePickPhoto}
+              disabled={uploadingPhoto}
+              className="mt-4 flex-row items-center justify-center rounded-xl border border-gray-200 py-3"
+            >
+              {uploadingPhoto ? (
+                <ActivityIndicator size="small" color="#000" />
+              ) : (
+                <>
+                  <Camera size={17} color="#000" />
+                  <Text className="ml-2 text-[12px] font-semibold text-black">
+                    Adicionar foto
+                  </Text>
+                </>
+              )}
             </TouchableOpacity>
           )}
         </Section>

@@ -28,7 +28,9 @@ import {
 
 import DiagonalPattern from "../../components/DiagonalPattern";
 import CreateAppointmentMenu from "./CreateAppointmentMenu";
-import CalendarSettingsModal from "./CalendarSettingsModal";
+
+import BusinessSettingsMenu from "../profile/BusinessSettingsMenu";
+
 import NotificationsModal from "./NotificationsModal";
 import DateOptionsModal from "./DateOptionsModal";
 
@@ -45,8 +47,6 @@ export default function AgendaScreen({ navigation }) {
   const [selectedDate, setSelectedDate] = useState(getBrasiliaNow());
   const [appointments, setAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  const [settingsModalVisible, setSettingsModalVisible] = useState(false);
   const [notificationsModalVisible, setNotificationsModalVisible] =
     useState(false);
   const [dateModalVisible, setDateModalVisible] = useState(false);
@@ -54,7 +54,7 @@ export default function AgendaScreen({ navigation }) {
   // Dias da semana
   const weekDays = useMemo(
     () => getCurrentWeekDays(selectedDate),
-    [selectedDate]
+    [selectedDate],
   );
 
   // Horários
@@ -118,7 +118,7 @@ export default function AgendaScreen({ navigation }) {
 
   // Agendamentos do dia selecionado
   const dayAppointments = appointments.filter((appointment) =>
-    isSameDay(new Date(appointment.startsAt), selectedDate)
+    isSameDay(new Date(appointment.startsAt), selectedDate),
   );
 
   // Abre o modal de notificações já recarregando os dados
@@ -134,7 +134,7 @@ export default function AgendaScreen({ navigation }) {
 
       const updatedAppointment = await appointmentApi.updateStatus(
         appointmentId,
-        "CONFIRMED"
+        "CONFIRMED",
       );
 
       setAppointments((prev) =>
@@ -145,8 +145,8 @@ export default function AgendaScreen({ navigation }) {
                 ...updatedAppointment,
                 status: "CONFIRMED",
               }
-            : appointment
-        )
+            : appointment,
+        ),
       );
     } catch (error) {
       console.error("Erro ao confirmar agendamento:", error);
@@ -162,7 +162,7 @@ export default function AgendaScreen({ navigation }) {
 
       const updatedAppointment = await appointmentApi.updateStatus(
         appointmentId,
-        "CANCELLED"
+        "CANCELLED",
       );
 
       setAppointments((prev) =>
@@ -173,8 +173,8 @@ export default function AgendaScreen({ navigation }) {
                 ...updatedAppointment,
                 status: "CANCELLED",
               }
-            : appointment
-        )
+            : appointment,
+        ),
       );
     } catch (error) {
       console.error("Erro ao cancelar agendamento:", error);
@@ -199,9 +199,7 @@ export default function AgendaScreen({ navigation }) {
         >
           <View className="items-center">
             <View className="flex-row items-center">
-              <Text className="text-[18px] font-semibold text-black">
-                Hoje
-              </Text>
+              <Text className="text-[18px] font-semibold text-black">Data</Text>
 
               <ChevronDown size={20} color="#000" />
             </View>
@@ -217,14 +215,14 @@ export default function AgendaScreen({ navigation }) {
 
         {/* Configurações */}
         <TouchableOpacity
-          onPress={() => setSettingsModalVisible(true)}
+          onPress={() => navigation.navigate("BusinessSettingsMenu")}
         >
           <Settings size={28} color="#000" />
         </TouchableOpacity>
       </View>
 
       {/* ================= SEMANA ================= */}
-      <View className="mt-6 flex-row justify-between px-6">
+      <View className="mt-6 flex-row items-center justify-between px-6">
         {weekDays.map((day) => {
           const selected = isSameDay(day.date, selectedDate);
 
@@ -232,24 +230,31 @@ export default function AgendaScreen({ navigation }) {
             <TouchableOpacity
               key={day.date.toISOString()}
               onPress={() => setSelectedDate(day.date)}
+              activeOpacity={0.7}
               className="items-center"
             >
-              <Text className="text-[12px] text-gray-400">
+              <Text className="text-[12px] font-medium text-gray-400">
                 {day.label}
               </Text>
 
               <View
-                style={{ borderRadius: 999 }}
-                className={`mt-1 h-8 w-8 items-center justify-center ${
-                  selected ? "bg-red-400" : ""
-                }`}
+                style={{
+                  width: 38,
+                  height: 38,
+                  marginTop: 5,
+                  borderRadius: 19,
+                  overflow: "hidden",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: selected ? "#f87171" : "transparent",
+                }}
               >
                 <Text
-                  className={`text-[12px] ${
-                    selected
-                      ? "font-bold text-white"
-                      : "text-black"
-                  }`}
+                  style={{
+                    fontSize: 13,
+                    fontWeight: selected ? "700" : "500",
+                    color: selected ? "#FFFFFF" : "#000000",
+                  }}
                 >
                   {day.day}
                 </Text>
@@ -265,10 +270,7 @@ export default function AgendaScreen({ navigation }) {
           {/* Horários */}
           <View style={{ width: SIDEBAR_WIDTH }}>
             {hours.map((hour) => (
-              <View
-                key={hour}
-                style={{ height: HOUR_HEIGHT }}
-              >
+              <View key={hour} style={{ height: HOUR_HEIGHT }}>
                 <Text className="pl-2 text-[11px] text-gray-400">
                   {formatHourLabel(hour)}
                 </Text>
@@ -285,10 +287,7 @@ export default function AgendaScreen({ navigation }) {
             className="relative overflow-hidden rounded-lg"
           >
             {/* Fundo com textura */}
-            <DiagonalPattern
-              width={TIMELINE_WIDTH}
-              height={timelineHeight}
-            />
+            <DiagonalPattern width={TIMELINE_WIDTH} height={timelineHeight} />
 
             {/* Linhas dos horários */}
             {hours.map((hour, index) => (
@@ -324,12 +323,9 @@ export default function AgendaScreen({ navigation }) {
               const start = new Date(item.startsAt);
               const end = new Date(item.endsAt);
 
-              const top = minutesToY(
-                getMinutesFromStart(start)
-              );
+              const top = minutesToY(getMinutesFromStart(start));
 
-              const height =
-                minutesToY(getMinutesFromStart(end)) - top;
+              const height = minutesToY(getMinutesFromStart(end)) - top;
 
               return (
                 <View
@@ -337,25 +333,27 @@ export default function AgendaScreen({ navigation }) {
                   style={{
                     position: "absolute",
                     top,
-                    height: Math.max(height, 30),
-                    left: 12,
-                    right: 12,
+                    height: Math.max(height - 4, 38),
+                    left: 8,
+                    right: 8,
                   }}
-                  className="justify-center rounded-lg bg-[#f1cf0e] px-4 py-2"
+                  className="overflow-hidden rounded-xl bg-[#f1cf0e]"
                 >
-                  <Text
-                    numberOfLines={1}
-                    className="text-[11px] font-semibold text-white"
-                  >
-                    {item.clientName}
-                  </Text>
+                  <View className="flex-1 justify-center px-3.5">
+                    <Text
+                      numberOfLines={1}
+                      className="text-[12px] font-bold text-white"
+                    >
+                      {item.clientName}
+                    </Text>
 
-                  <Text
-                    numberOfLines={1}
-                    className="text-[9px] text-white/80"
-                  >
-                    {item.serviceName}
-                  </Text>
+                    <Text
+                      numberOfLines={1}
+                      className="mt-1 text-[10px] font-medium text-white/80"
+                    >
+                      {item.serviceName}
+                    </Text>
+                  </View>
                 </View>
               );
             })}
@@ -367,10 +365,6 @@ export default function AgendaScreen({ navigation }) {
       <CreateAppointmentMenu navigation={navigation} />
 
       {/* ================= CONFIGURAÇÕES ================= */}
-      <CalendarSettingsModal
-        visible={settingsModalVisible}
-        onClose={() => setSettingsModalVisible(false)}
-      />
 
       {/* ================= NOTIFICAÇÕES ================= */}
       <NotificationsModal

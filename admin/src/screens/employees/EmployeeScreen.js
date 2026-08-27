@@ -147,229 +147,259 @@ export default function EmployeeScreen({ navigation }) {
   }
 
   return (
-    <View className="flex-1 bg-white">
+  <View className="flex-1 bg-white">
 
-      {/* HEADER */}
+    {/* HEADER */}
+    <View className="px-5 pb-6 pt-14">
+      <View className="flex-row items-center justify-between">
 
-      <View className="px-5 pb-4 pt-14">
+        <View className="flex-1">
+          <Text className="text-[26px] font-bold tracking-[-0.6px] text-black">
+            Funcionários
+          </Text>
 
-        <View className="flex-row items-center justify-between">
-
-          <View>
-            <Text className="text-[22px] font-bold text-black">
-              Funcionários
-            </Text>
-
-            <Text className="mt-1 text-[10px] text-gray-400">
-              Gerencie sua equipe
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={handleAddEmployee}
-            className="h-10 w-10 items-center justify-center rounded-full bg-black"
-          >
-            <Plus
-              size={21}
-              color="#fff"
-              strokeWidth={2}
-            />
-          </TouchableOpacity>
-
+          <Text className="mt-1.5 text-[12px] text-gray-400">
+            Gerencie sua equipe
+          </Text>
         </View>
+
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={handleAddEmployee}
+          className="h-12 w-12 items-center justify-center rounded-full bg-black"
+        >
+          <Plus
+            size={23}
+            color="#fff"
+            strokeWidth={2.2}
+          />
+        </TouchableOpacity>
+
+      </View>
+    </View>
+
+    {/* SEM BUSINESS ID */}
+    {!businessId ? (
+
+      <View className="flex-1 items-center justify-center px-8">
+
+        <View className="h-20 w-20 items-center justify-center rounded-full bg-gray-100">
+          <UserRound
+            size={34}
+            color="#999"
+            strokeWidth={1.6}
+          />
+        </View>
+
+        <Text className="mt-6 text-[18px] font-bold text-black">
+          Empresa não identificada
+        </Text>
+
+        <Text className="mt-2 max-w-[290px] text-center text-[12px] leading-5 text-gray-400">
+          Não foi possível identificar a empresa
+          vinculada à sua conta.
+        </Text>
 
       </View>
 
-      {/* SEM BUSINESS ID */}
+    ) : employees.length === 0 ? (
 
-      {!businessId ? (
-        <View className="flex-1 items-center justify-center px-8">
+      /* NENHUM FUNCIONÁRIO */
+      <View className="flex-1 items-center justify-center px-8">
 
-          <View className="h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-            <UserRound
-              size={28}
-              color="#999"
-              strokeWidth={1.7}
-            />
-          </View>
-
-          <Text className="mt-4 text-[15px] font-semibold text-black">
-            Empresa não identificada
-          </Text>
-
-          <Text className="mt-1 text-center text-[10px] leading-4 text-gray-400">
-            Não foi possível identificar a empresa
-            vinculada à sua conta.
-          </Text>
-
+        <View className="h-20 w-20 items-center justify-center rounded-full bg-gray-100">
+          <UserRound
+            size={34}
+            color="#999"
+            strokeWidth={1.6}
+          />
         </View>
-      ) : employees.length === 0 ? (
 
-        /* NENHUM FUNCIONÁRIO */
+        <Text className="mt-6 text-[18px] font-bold text-black">
+          Nenhum funcionário
+        </Text>
 
-        <View className="flex-1 items-center justify-center px-8">
+        <Text className="mt-2 max-w-[300px] text-center text-[12px] leading-5 text-gray-400">
+          Cadastre os profissionais que fazem parte
+          da sua equipe para começar a gerenciá-los.
+        </Text>
 
-          <View className="h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={handleAddEmployee}
+          className="mt-7 flex-row items-center rounded-xl bg-black px-6 py-4"
+        >
+          <Plus
+            size={18}
+            color="#fff"
+            strokeWidth={2.2}
+          />
 
-            <UserRound
-              size={28}
-              color="#999"
-              strokeWidth={1.7}
-            />
-
-          </View>
-
-          <Text className="mt-4 text-[15px] font-semibold text-black">
-            Nenhum funcionário
+          <Text className="ml-2.5 text-[12px] font-bold text-white">
+            Adicionar funcionário
           </Text>
+        </TouchableOpacity>
 
-          <Text className="mt-1 text-center text-[10px] leading-4 text-gray-400">
-            Cadastre os profissionais que fazem parte
-            da sua equipe.
-          </Text>
+      </View>
 
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={handleAddEmployee}
-            className="mt-5 flex-row items-center rounded-xl bg-black px-5 py-3"
-          >
+    ) : (
 
-            <Plus
-              size={16}
-              color="#fff"
-            />
+      /* LISTA */
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingBottom: 110,
+        }}
+      >
 
-            <Text className="ml-2 text-[11px] font-semibold text-white">
-              Adicionar funcionário
+        {/* RESUMO */}
+        <View className="mb-5 flex-row items-center justify-between">
+
+          <View>
+            <Text className="text-[11px] font-semibold uppercase tracking-[1px] text-gray-400">
+              Sua equipe
             </Text>
 
-          </TouchableOpacity>
+            <Text className="mt-1.5 text-[15px] font-semibold text-black">
+              {employees.length}{" "}
+              {employees.length === 1
+                ? "profissional"
+                : "profissionais"}
+            </Text>
+          </View>
+
+          <View className="flex-row items-center rounded-full bg-gray-100 px-3.5 py-2">
+
+            <View className="mr-2 h-2 w-2 rounded-full bg-green-500" />
+
+            <Text className="text-[10px] font-medium text-gray-500">
+              Equipe ativa
+            </Text>
+
+          </View>
 
         </View>
 
-      ) : (
+        {/* LISTA DE FUNCIONÁRIOS */}
+        {employees.map((employee) => (
 
-        /* LISTA */
+          <TouchableOpacity
+            key={employee.id}
+            activeOpacity={0.85}
+            onPress={() => handleEmployee(employee)}
+            className="mb-4 flex-row items-center rounded-2xl border border-gray-100 bg-white p-5"
+            style={{
+              shadowColor: "#000",
+              shadowOpacity: 0.035,
+              shadowRadius: 8,
+              shadowOffset: {
+                width: 0,
+                height: 3,
+              },
+              elevation: 1,
+            }}
+          >
 
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={{
-            paddingHorizontal: 20,
-            paddingBottom: 100,
-          }}
-        >
+            {/* AVATAR */}
+            <View className="h-[58px] w-[58px] items-center justify-center rounded-full bg-gray-100">
 
-          <Text className="mb-3 text-[10px] font-medium text-gray-400">
-            {employees.length}{" "}
-            {employees.length === 1
-              ? "PROFISSIONAL"
-              : "PROFISSIONAIS"}
-          </Text>
-
-          {employees.map((employee) => (
-
-            <TouchableOpacity
-              key={employee.id}
-              activeOpacity={0.8}
-              onPress={() =>
-                handleEmployee(employee)
-              }
-              className="mb-3 flex-row items-center rounded-2xl border border-gray-200 bg-white p-4"
-              style={{
-                shadowColor: "#000",
-                shadowOpacity: 0.03,
-                shadowRadius: 5,
-                shadowOffset: {
-                  width: 0,
-                  height: 2,
-                },
-                elevation: 1,
-              }}
-            >
-
-              {/* FOTO */}
-
-              <View className="h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-
+              {employee.name ? (
+                <Text className="text-[20px] font-bold text-gray-500">
+                  {employee.name
+                    .trim()
+                    .charAt(0)
+                    .toUpperCase()}
+                </Text>
+              ) : (
                 <UserRound
-                  size={22}
+                  size={25}
                   color="#777"
                   strokeWidth={1.7}
                 />
+              )}
 
-              </View>
+            </View>
 
-              {/* INFORMAÇÕES */}
+            {/* INFORMAÇÕES */}
+            <View className="ml-4 flex-1">
 
-              <View className="ml-3 flex-1">
+              {/* NOME + STATUS */}
+              <View className="flex-row items-center">
 
-                <View className="flex-row items-center">
+                <Text
+                  numberOfLines={1}
+                  className="flex-1 text-[15px] font-bold text-black"
+                >
+                  {employee.name}
+                </Text>
 
-                  <Text
-                    numberOfLines={1}
-                    className="flex-1 text-[13px] font-bold text-black"
-                  >
-                    {employee.name}
+                <View className="ml-2 flex-row items-center rounded-full bg-green-50 px-2.5 py-1.5">
+
+                  <View className="h-1.5 w-1.5 rounded-full bg-green-500" />
+
+                  <Text className="ml-1.5 text-[9px] font-semibold text-green-600">
+                    Ativo
                   </Text>
-
-                  <View className="ml-2 flex-row items-center">
-
-                    <View className="h-1.5 w-1.5 rounded-full bg-green-500" />
-
-                    <Text className="ml-1 text-[8px] text-gray-400">
-                      Ativo
-                    </Text>
-
-                  </View>
 
                 </View>
 
-                {employee.specialty && (
-                  <Text
-                    numberOfLines={1}
-                    className="mt-1 text-[10px] text-gray-400"
-                  >
-                    {employee.specialty}
-                  </Text>
-                )}
+              </View>
 
-                {employee.bio && (
-                  <Text
-                    numberOfLines={1}
-                    className="mt-0.5 text-[9px] text-gray-400"
-                  >
-                    {employee.bio}
-                  </Text>
-                )}
+              {/* ESPECIALIDADE */}
+              {employee.specialty && (
+                <Text
+                  numberOfLines={1}
+                  className="mt-1.5 text-[12px] font-medium text-gray-500"
+                >
+                  {employee.specialty}
+                </Text>
+              )}
 
-                {employee.rating != null && (
-                  <Text className="mt-1 text-[9px] text-gray-500">
-                    ★{" "}
+              {/* BIO */}
+              {employee.bio && (
+                <Text
+                  numberOfLines={1}
+                  className="mt-1 text-[11px] text-gray-400"
+                >
+                  {employee.bio}
+                </Text>
+              )}
+
+              {/* AVALIAÇÃO */}
+              {employee.rating != null && (
+                <View className="mt-1.5 flex-row items-center">
+
+                  <Text className="text-[11px] text-black">
+                    ★
+                  </Text>
+
+                  <Text className="ml-1 text-[10px] font-medium text-gray-500">
                     {Number(employee.rating).toFixed(1)}
                   </Text>
-                )}
 
-              </View>
+                </View>
+              )}
 
-              {/* MENU */}
+            </View>
 
-              <View className="h-9 w-9 items-center justify-center rounded-full bg-gray-50">
+            {/* MENU */}
+            <View className="ml-3 h-10 w-10 items-center justify-center rounded-full bg-gray-50">
 
-                <MoreVertical
-                  size={17}
-                  color="#777"
-                />
+              <MoreVertical
+                size={19}
+                color="#777"
+                strokeWidth={2}
+              />
 
-              </View>
+            </View>
 
-            </TouchableOpacity>
+          </TouchableOpacity>
 
-          ))}
+        ))}
 
-        </ScrollView>
-      )}
+      </ScrollView>
+    )}
 
-    </View>
-  );
-}
+  </View>
+)};

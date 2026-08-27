@@ -5,6 +5,8 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
+  Pressable,
+  Image,
 } from "react-native";
 import { Eye, EyeOff, Mail } from "lucide-react-native";
 import { useAuthStore } from "../../store/authStore";
@@ -12,8 +14,7 @@ import { useAuthStore } from "../../store/authStore";
 const MAX_EMAIL_LENGTH = 100;
 const MAX_PASSWORD_LENGTH = 8;
 
-const EMAIL_REGEX =
-  /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
+const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
@@ -98,17 +99,12 @@ export default function LoginScreen({ navigation }) {
     await login(cleanEmail, password);
   }
 
-  const canLogin =
-    email.length > 0 &&
-    password.length > 0 &&
-    !isLoading;
+  const canLogin = email.length > 0 && password.length > 0 && !isLoading;
 
   return (
     <View className="flex-1 bg-white px-6 pt-16">
-
       {/* Toggle */}
       <View className="mb-10 flex-row rounded-full bg-gray-100 p-1">
-
         <View className="flex-1 rounded-full bg-black py-2.5">
           <Text className="text-center font-medium text-white">
             Fazer login
@@ -124,13 +120,22 @@ export default function LoginScreen({ navigation }) {
             Inscrever-se
           </Text>
         </TouchableOpacity>
-
       </View>
 
       {/* Título */}
       <Text className="mb-8 text-center text-2xl font-semibold">
         Bem-vindo Empreendedor
       </Text>
+
+      <Image
+            source={require("../../../assets/img/login.png")}
+            style={{
+             
+              width: "100%",
+              height: 250,
+            }}
+            resizeMode="contain"
+          />
 
       {/* E-mail */}
       <TextInput
@@ -150,7 +155,6 @@ export default function LoginScreen({ navigation }) {
 
       {/* Senha */}
       <View className="mb-2 flex-row items-center rounded-xl border border-gray-200 px-4 py-3.5">
-
         <TextInput
           className="flex-1"
           placeholder="Senha"
@@ -177,7 +181,6 @@ export default function LoginScreen({ navigation }) {
             <Eye size={20} color="#9CA3AF" />
           )}
         </TouchableOpacity>
-
       </View>
 
       {/* Contador da senha */}
@@ -187,15 +190,11 @@ export default function LoginScreen({ navigation }) {
 
       {/* Erros */}
       {validationError ? (
-        <Text className="mb-2 text-sm text-red-500">
-          {validationError}
-        </Text>
+        <Text className="mb-2 text-sm text-red-500">{validationError}</Text>
       ) : null}
 
       {!validationError && error ? (
-        <Text className="mb-2 text-sm text-red-500">
-          {error}
-        </Text>
+        <Text className="mb-2 text-sm text-red-500">{error}</Text>
       ) : null}
 
       {/* Login */}
@@ -211,10 +210,7 @@ export default function LoginScreen({ navigation }) {
           <ActivityIndicator color="#fff" />
         ) : (
           <>
-            <Mail
-              size={18}
-              color={canLogin ? "#fff" : "#9CA3AF"}
-            />
+            <Mail size={18} color={canLogin ? "#fff" : "#9CA3AF"} />
 
             <Text
               className={`ml-2 font-semibold ${
@@ -228,10 +224,7 @@ export default function LoginScreen({ navigation }) {
       </TouchableOpacity>
 
       {/* Esqueci senha */}
-      <TouchableOpacity
-        className="mt-4"
-        disabled={isLoading}
-      >
+      <TouchableOpacity className="mt-4" disabled={isLoading}>
         <Text className="text-center text-gray-500 underline">
           Esqueceu a senha
         </Text>
@@ -239,36 +232,26 @@ export default function LoginScreen({ navigation }) {
 
       {/* Separador */}
       <View className="my-8 flex-row items-center">
-
         <View className="h-px flex-1 bg-gray-200" />
 
-        <Text className="mx-3 text-xs text-gray-400">
-          OU FAÇA LOGIN COM
-        </Text>
+        <Text className="mx-3 text-xs text-gray-400">OU FAÇA LOGIN COM GOOGLE</Text>
 
         <View className="h-px flex-1 bg-gray-200" />
-
       </View>
 
       {/* Login social */}
-      <View className="flex-row gap-3">
 
-        <TouchableOpacity
-          disabled
-          className="flex-1 items-center rounded-xl border border-gray-200 py-3.5 opacity-40"
-        >
-          <Text>G</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          disabled
-          className="flex-1 items-center rounded-xl border border-gray-200 py-3.5 opacity-40"
-        >
-          <Text>f</Text>
-        </TouchableOpacity>
-
-      </View>
-
+      <Pressable className="h-14 rounded-2xl bg-neutral-100 flex-row items-center justify-center">
+        <Image
+          source={require("../../../assets/img/google.png")}
+          style={{
+            width: 25,
+            height: 25,
+          
+          }}
+          resizeMode="contain"
+        />
+      </Pressable>
     </View>
   );
 }
