@@ -2,7 +2,6 @@ import {
   Search,
   UserRound,
   ChevronRight,
-  Plus,
 } from "lucide-react-native";
 
 import {
@@ -17,10 +16,12 @@ import {
 
 import { useEffect, useState } from "react";
 import { useBusinessStore } from "../../store/businessStore";
+import { useContentTopPadding } from "../../hooks/useContentTopPadding";
 import { clientApi } from "../../api/clientApi";
 
 export default function ClientsScreen({ navigation }) {
   const businessId = useBusinessStore((state) => state.status?.id);
+  const topPad = useContentTopPadding();
 
   const [clients, setClients] = useState([]);
   const [search, setSearch] = useState("");
@@ -115,31 +116,17 @@ export default function ClientsScreen({ navigation }) {
   }
 
   return (
-    <View className="flex-1 bg-white px-5 pt-14">
+    <View className="flex-1 bg-white px-5" style={{ paddingTop: topPad }}>
 
       {/* HEADER */}
-      <View className="flex-row items-center justify-between">
-        <View className="flex-1">
-          <Text className="text-[24px] font-bold text-black">
-            Clientes
-          </Text>
+      <View>
+        <Text className="text-[24px] font-bold text-black">
+          Clientes
+        </Text>
 
-          <Text className="mt-1 text-[14px] text-gray-400">
-            Gerencie seus clientes
-          </Text>
-        </View>
-
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() => navigation.navigate("CreateClient")}
-          className="h-11 w-11 items-center justify-center rounded-full bg-black"
-        >
-          <Plus
-            size={23}
-            color="#fff"
-            strokeWidth={2}
-          />
-        </TouchableOpacity>
+        <Text className="mt-1 text-[14px] text-gray-400">
+          Quem já agendou com você
+        </Text>
       </View>
 
       {/* BUSCA */}
@@ -221,23 +208,8 @@ export default function ClientsScreen({ navigation }) {
               <Text className="mt-2 text-center text-[13px] leading-5 text-gray-400">
                 {search.trim()
                   ? "Tente buscar por outro nome."
-                  : "Quando você cadastrar clientes, eles aparecerão aqui."}
+                  : "Assim que alguém agendar um horário, o cliente aparece aqui."}
               </Text>
-
-              {/* BOTÃO */}
-              {!search.trim() && (
-                <TouchableOpacity
-                  activeOpacity={0.8}
-                  onPress={() =>
-                    navigation.navigate("CreateClient")
-                  }
-                  className="mt-5 rounded-xl bg-black px-6 py-3"
-                >
-                  <Text className="text-[14px] font-semibold text-white">
-                    Adicionar cliente
-                  </Text>
-                </TouchableOpacity>
-              )}
             </View>
           }
         />

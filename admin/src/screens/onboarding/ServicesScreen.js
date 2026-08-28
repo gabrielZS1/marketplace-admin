@@ -1,27 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   Modal,
+  Pressable,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Trash2,
-  Plus,
-  X,
-} from "lucide-react-native";
+import { Plus, Trash2, Clock, Scissors } from "lucide-react-native";
 import { useOnboardingStore } from "../../store/onboardingStore";
 import { serviceApi } from "../../api/serviceApi";
+import OnboardingScreen from "../../components/onboarding/OnboardingScreen";
+import Button from "../../components/ui/Button";
+import { stepIndex, TOTAL_ONBOARDING_STEPS } from "../../theme";
+
+const OVERLAY_MAX = 0.5;
 
 export default function ServicesScreen({ navigation }) {
   const businessId = useOnboardingStore((state) => state.businessId);
 
   const [services, setServices] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState(null);
 
@@ -30,6 +30,9 @@ export default function ServicesScreen({ navigation }) {
   const [duration, setDuration] = useState("");
   const [price, setPrice] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+
+  const overlayOpacity = useRef(new Animated.Value(0)).current;
+  const modalTranslateY = useRef(new Animated.Value(40)).current;
 
   useEffect(() => {
     loadServices();
@@ -50,11 +53,27 @@ export default function ServicesScreen({ navigation }) {
     }
   }
 
-  function openAddModal() {
+  function openModal() {
     setName("");
     setDuration("");
     setPrice("");
+    setError(null);
     setModalVisible(true);
+    overlayOpacity.setValue(0);
+    modalTranslateY.setValue(40);
+    Animated.parallel([
+      Animated.timing(overlayOpacity, { toValue: OVERLAY_MAX, duration: 200, useNativeDriver: true }),
+      Animated.spring(modalTranslateY, { toValue: 0, damping: 18, stiffness: 180, mass: 0.8, useNativeDriver: true }),
+    ]).start();
+  }
+
+  function closeModal() {
+    Animated.parallel([
+      Animated.timing(overlayOpacity, { toValue: 0, duration: 160, useNativeDriver: true }),
+      Animated.timing(modalTranslateY, { toValue: 40, duration: 180, useNativeDriver: true }),
+    ]).start(({ finished }) => {
+      if (finished) setModalVisible(false);
+    });
   }
 
   async function handleSaveService() {
@@ -62,7 +81,7 @@ export default function ServicesScreen({ navigation }) {
     const priceNumber = parseFloat(price.replace(",", "."));
 
     if (!name.trim() || !durationNumber || !priceNumber) {
-      setError("Preencha nome, duração (em minutos) e preço corretamente.");
+      setError("Preencha nome, duração (em minutos) e preço.");
       return;
     }
 
@@ -76,7 +95,7 @@ export default function ServicesScreen({ navigation }) {
         locationType: "ON_SITE",
       });
       setServices((prev) => [...prev, created]);
-      setModalVisible(false);
+      closeModal();
     } catch (err) {
       setError(err.message || "Não foi possível salvar o serviço.");
     } finally {
@@ -87,186 +106,131 @@ export default function ServicesScreen({ navigation }) {
   async function handleDelete(id) {
     try {
       await serviceApi.remove(businessId, id);
-      setServices((prev) => prev.filter((service) => service.id !== id));
+      setServices((prev) => prev.filter((s) => s.id !== id));
     } catch (err) {
       setError(err.message || "Não foi possível remover o serviço.");
     }
   }
 
-  function handleServicePress(service) {
-    console.log("Serviço selecionado:", service);
-  }
-
-  async function handleContinue() {
-    if (services.length < 1 || isLoading) return;
-    navigation.navigate("Complete")
-  }
-
   return (
-    <View className="flex-1 bg-white">
-      {/* CONTEÚDO */}
-      <View className="flex-1 px-4 pt-14">
-        {/* VOLTAR */}
-        <TouchableOpacity onPress={() => navigation.goBack()} className="mb-7">
-          <ChevronLeft size={24} color="#000" strokeWidth={2} />
-        </TouchableOpacity>
+    <OnboardingScreen
+      navigation={navigation}
+      step={stepIndex("Services")}
+      totalSteps={TOTAL_ONBOARDING_STEPS}
+      title="Adicione seus serviços"
+      subtitle="Cadastre pelo menos um. Você pode ajustar tudo depois."
+      scroll
+      footer={
+        <Button
+          title="Continuar"
+          onPress={() => navigation.navigate("Complete")}
+          disabled={services.length < 1}
+        />
+      }
+    >
+      {isFetching ? <ActivityIndicator color="#111827" /> : null}
 
-        {/* PROGRESSO */}
-        <View className="h-1 w-full overflow-hidden rounded-full bg-gray-200">
-          <View
-            className="h-full rounded-full bg-green-500"
-            style={{ width: "77%" }}
-          />
-        </View>
-
-        {/* TÍTULO */}
-        <View className="mt-7">
-          <Text className="text-[16px] font-semibold text-black">
-            Adicione seus serviços
-          </Text>
-
-          <TouchableOpacity
-            activeOpacity={0.7}
-            onPress={openAddModal}
-            className="mt-3 flex-row items-center self-start rounded-lg border border-gray-300 px-3 py-2"
-          >
-            <Plus size={16} color="#000" strokeWidth={2} />
-            <Text className="ml-1.5 text-[9px] font-medium text-black">
-              Adicionar serviço
+      {services.map((service) => (
+        <View
+          key={service.id}
+          className="mb-3 flex-row items-center rounded-2xl border border-gray-200 bg-white px-4 py-3"
+        >
+          <View className="h-10 w-10 items-center justify-center rounded-xl bg-gray-100">
+            <Scissors size={16} color="#6B7280" strokeWidth={2} />
+          </View>
+          <View className="ml-3 flex-1">
+            <Text className="text-[15px] font-semibold text-[#111827]">
+              {service.name}
             </Text>
-          </TouchableOpacity>
-
-          <Text className="mt-1 pr-2 text-[7px] leading-[10px] text-gray-400">
-            Adicione pelo menos 3 serviços agora. Mais tarde, você pode
-            adicionar mais, editar detalhes e agrupar serviços em categorias.
-          </Text>
-        </View>
-
-        {/* SERVIÇOS */}
-        <View className="mt-5">
-          {isFetching ? (
-            <ActivityIndicator className="mt-6" color="#000" />
-          ) : null}
-
-          {error ? (
-            <Text className="mt-3 text-[9px] text-red-500">{error}</Text>
-          ) : null}
-
-          {services.map((service) => (
-            <TouchableOpacity
-              key={service.id}
-              activeOpacity={0.7}
-              onPress={() => handleServicePress(service)}
-              className="flex-row items-center border-b border-gray-100 py-2.5"
-            >
-              {/* LIXEIRA */}
-              <TouchableOpacity
-                activeOpacity={0.7}
-                onPress={() => handleDelete(service.id)}
-                className="mr-2 w-6 items-center"
-              >
-                <Trash2 size={17} color="#cfcfcf" strokeWidth={1.8} />
-              </TouchableOpacity>
-
-              {/* INFORMAÇÕES */}
-              <View className="flex-1">
-                <Text className="text-[10px] font-medium text-black">
-                  {service.name}
-                </Text>
-
-                <Text className="mt-0.5 text-[6px] text-gray-400">
-                  {service.durationMinutes} min
-                </Text>
-              </View>
-
-              {/* PREÇO */}
-              <Text className="mr-2 text-[10px] font-medium text-black">
+            <View className="mt-0.5 flex-row items-center">
+              <Clock size={11} color="#9CA3AF" strokeWidth={2} />
+              <Text className="ml-1 text-[12px] text-gray-400">
+                {service.durationMinutes} min
+              </Text>
+              <Text className="mx-1.5 text-[12px] text-gray-300">·</Text>
+              <Text className="text-[12px] font-medium text-gray-500">
                 R$ {service.price?.toFixed(2).replace(".", ",")}
               </Text>
-
-              {/* SETA */}
-              <ChevronRight size={17} color="#000" strokeWidth={1.8} />
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      {/* RODAPÉ */}
-      <View className="px-4 pb-8">
-        <TouchableOpacity
-          disabled={services.length < 1 || isLoading}
-          onPress={handleContinue}
-          className="items-center rounded-xl bg-black py-3"
-        >
-          {isLoading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text className="text-[13px] font-semibold text-white">
-              Continuar
-            </Text>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      <Modal
-        visible={modalVisible}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View className="flex-1 items-center justify-center bg-black/40 px-6">
-          <View className="w-full rounded-2xl bg-white p-5">
-            <View className="flex-row items-center justify-between">
-              <Text className="text-[13px] font-bold text-black">
-                Novo serviço
-              </Text>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <X size={18} color="#000" />
-              </TouchableOpacity>
             </View>
+          </View>
+          <TouchableOpacity
+            onPress={() => handleDelete(service.id)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Trash2 size={16} color="#D1D5DB" strokeWidth={2} />
+          </TouchableOpacity>
+        </View>
+      ))}
+
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={openModal}
+        className="flex-row items-center justify-center rounded-2xl border border-dashed border-gray-300 py-4"
+      >
+        <Plus size={18} color="#111827" strokeWidth={2.2} />
+        <Text className="ml-2 text-[14px] font-semibold text-[#111827]">
+          Adicionar serviço
+        </Text>
+      </TouchableOpacity>
+
+      {error && !modalVisible ? (
+        <Text className="mt-3 text-[13px] text-red-600">{error}</Text>
+      ) : null}
+
+      <Modal visible={modalVisible} transparent animationType="none" onRequestClose={closeModal}>
+        <View className="flex-1 items-center justify-center px-6">
+          <Animated.View
+            pointerEvents="none"
+            className="absolute inset-0 bg-black"
+            style={{ opacity: overlayOpacity }}
+          />
+          <Pressable onPress={closeModal} className="absolute inset-0" />
+
+          <Animated.View
+            style={{ transform: [{ translateY: modalTranslateY }] }}
+            className="w-full max-w-[400px] rounded-3xl bg-white px-6 pb-6 pt-7"
+          >
+            <Text className="text-lg font-bold text-[#111827]">Novo serviço</Text>
 
             <TextInput
               value={name}
               onChangeText={setName}
               placeholder="Nome do serviço"
-              placeholderTextColor="#999"
-              className="mt-4 h-11 rounded-xl border border-gray-200 px-3 text-[11px] text-black"
+              placeholderTextColor="#9CA3AF"
+              className="mt-5 h-14 rounded-2xl border border-gray-200 px-4 text-[15px] text-[#111827]"
             />
+            <View className="mt-3 flex-row" style={{ gap: 12 }}>
+              <TextInput
+                value={duration}
+                onChangeText={setDuration}
+                placeholder="Duração (min)"
+                placeholderTextColor="#9CA3AF"
+                keyboardType="numeric"
+                className="h-14 flex-1 rounded-2xl border border-gray-200 px-4 text-[15px] text-[#111827]"
+              />
+              <TextInput
+                value={price}
+                onChangeText={setPrice}
+                placeholder="Preço (R$)"
+                placeholderTextColor="#9CA3AF"
+                keyboardType="decimal-pad"
+                className="h-14 flex-1 rounded-2xl border border-gray-200 px-4 text-[15px] text-[#111827]"
+              />
+            </View>
 
-            <TextInput
-              value={duration}
-              onChangeText={setDuration}
-              placeholder="Duração (minutos)"
-              placeholderTextColor="#999"
-              keyboardType="numeric"
-              className="mt-3 h-11 rounded-xl border border-gray-200 px-3 text-[11px] text-black"
-            />
+            {error && modalVisible ? (
+              <Text className="mt-3 text-[13px] text-red-600">{error}</Text>
+            ) : null}
 
-            <TextInput
-              value={price}
-              onChangeText={setPrice}
-              placeholder="Preço (ex: 40,00)"
-              placeholderTextColor="#999"
-              keyboardType="decimal-pad"
-              className="mt-3 h-11 rounded-xl border border-gray-200 px-3 text-[11px] text-black"
-            />
-
-            <TouchableOpacity
-              disabled={isSaving}
-              onPress={handleSaveService}
-              className="mt-4 items-center rounded-xl bg-black py-3"
-            >
-              {isSaving ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text className="text-[12px] font-semibold text-white">
-                  Salvar
-                </Text>
-              )}
+            <View className="mt-4">
+              <Button title="Salvar serviço" onPress={handleSaveService} loading={isSaving} />
+            </View>
+            <TouchableOpacity onPress={closeModal} className="mt-2 h-11 items-center justify-center">
+              <Text className="text-[14px] font-medium text-gray-500">Cancelar</Text>
             </TouchableOpacity>
-          </View>
+          </Animated.View>
         </View>
       </Modal>
-    </View>
+    </OnboardingScreen>
   );
 }

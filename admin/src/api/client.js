@@ -26,8 +26,19 @@ apiClient.interceptors.request.use(async (config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    const message =
-      error.response?.data?.message || "Erro de conexão. Tente novamente.";
+    const data = error.response?.data;
+
+    // Assinatura bloqueada (trial expirado / pagamento suspenso):
+    // trava o app e manda pra tela de renovação.
+    if (error.response?.status === 403 && data?.error === "SUBSCRIPTION_BLOCKED") {
+      import("../store/businessStore")
+        .then(({ useBusinessStore }) => {
+          useBusinessStore.getState().applyBlock(data.reason);
+        })
+        .catch(() => {});
+    }
+
+    const message = data?.message || "Erro de conexão. Tente novamente.";
     return Promise.reject({ ...error, message });
   }
 );

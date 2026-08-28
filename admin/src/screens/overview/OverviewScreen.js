@@ -21,9 +21,13 @@ import {
 
 import { getEmployees } from "../../api/employeeApi";
 import { apiClient } from "../../api/client";
+import { useBusinessStore } from "../../store/businessStore";
+import { useContentTopPadding } from "../../hooks/useContentTopPadding";
 
 export default function OverviewScreen({ navigation, route }) {
-  const businessId = route?.params?.businessId;
+  const storeBusinessId = useBusinessStore((state) => state.status?.id);
+  const businessId = route?.params?.businessId ?? storeBusinessId;
+  const topPad = useContentTopPadding();
 
   const [appointments, setAppointments] = useState([]);
   const [employees, setEmployees] = useState([]);
@@ -187,7 +191,7 @@ export default function OverviewScreen({ navigation, route }) {
         }
         contentContainerStyle={{
           paddingHorizontal: 20,
-          paddingTop: 55,
+          paddingTop: topPad,
           paddingBottom: 35,
         }}
       >
@@ -491,14 +495,14 @@ export default function OverviewScreen({ navigation, route }) {
               className="mr-3 flex-1 rounded-2xl bg-gray-50 p-4"
             >
               <View className="h-9 w-9 items-center justify-center rounded-full bg-white">
-                <Plus
+                <CalendarDays
                   size={18}
                   color="#000"
                 />
               </View>
 
               <Text className="mt-4 text-[11px] font-semibold text-black">
-                Novo agendamento
+                Ver seus agendamentos
               </Text>
             </TouchableOpacity>
 

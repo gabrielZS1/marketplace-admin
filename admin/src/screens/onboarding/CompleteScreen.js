@@ -1,117 +1,108 @@
 import { useState } from "react";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
-import { CheckCircle2 } from "lucide-react-native";
-import * as WebBrowser from "expo-web-browser";
+import { Text, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { CheckCircle2, PartyPopper } from "lucide-react-native";
 import { useOnboardingStore } from "../../store/onboardingStore";
 import { onboardingApi } from "../../api/onboardingApi";
-
 import { useBusinessStore } from "../../store/businessStore";
 import { useAuthStore } from "../../store/authStore";
+import Button from "../../components/ui/Button";
 
-export default function CompleteScreen({ navigation }) {
+export default function CompleteScreen() {
+  const insets = useSafeAreaInsets();
   const businessId = useOnboardingStore((state) => state.businessId);
   const promoCode = useOnboardingStore((state) => state.promoCode);
+  const resetOnboarding = useOnboardingStore((state) => state.reset);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [browserOpened, setBrowserOpened] = useState(false);
-  const fetchBusinessStatus = useBusinessStore((state) => state.fetchStatus);
+  const [done, setDone] = useState(false);
 
+  const fetchBusinessStatus = useBusinessStore((state) => state.fetchStatus);
   const logout = useAuthStore((state) => state.logout);
 
   async function handleFinish() {
-  if (isLoading) return;
-  if (!businessId) {
-    setError("Sessão de cadastro perdida. Volte ao início do cadastro.");
-    return;
-  }
-
-  setError(null);
-  setIsLoading(true);
-  try {
-    const result = await onboardingApi.complete(businessId, promoCode);
-    const paymentUrl = result?.paymentUrl;
-
-    if (!paymentUrl) {
-      // Trial de 7 dias, sem código promocional — não precisa pagar agora
-      setBrowserOpened(true);
+    if (isLoading) return;
+    if (!businessId) {
+      setError("Sessão de cadastro perdida. Volte ao início do cadastro.");
       return;
     }
-
-    if (!paymentUrl.startsWith("https://")) {
-      setError("Não recebemos um link de pagamento válido. Tente novamente em instantes.");
-      return;
+    setError(null);
+    setIsLoading(true);
+    try {
+      await onboardingApi.complete(businessId, promoCode);
+      setDone(true);
+    } catch (err) {
+      setError(err.message || "Não foi possível finalizar o cadastro. Tente novamente.");
+    } finally {
+      setIsLoading(false);
     }
-
-    await WebBrowser.openBrowserAsync(paymentUrl);
-    setBrowserOpened(true);
-  } catch (err) {
-    setError(err.message || "Não foi possível iniciar o pagamento. Tente novamente.");
-  } finally {
-    setIsLoading(false);
   }
-}
 
-  if (browserOpened) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white px-6">
-        <CheckCircle2 size={48} color="#22c55e" />
-        <Text className="mt-4 text-center text-[14px] font-semibold text-black">
-          Cadastro enviado!
-        </Text>
-        <Text className="mt-2 text-center text-[10px] text-gray-500">
-          Assim que o pagamento for confirmado pelo Mercado Pago, sua conta será ativada
-          automaticamente. Isso pode levar alguns instantes.
-        </Text>
-
-        <TouchableOpacity
-          onPress={fetchBusinessStatus}
-          className="mt-6 rounded-xl bg-black px-6 py-3"
-        >
-          <Text className="text-[12px] font-semibold text-white">Continuar</Text>
-        </TouchableOpacity>
-      </View>
-    );
+  async function handleEnter() {
+    setIsLoading(true);
+    try {
+      await fetchBusinessStatus();
+      resetOnboarding();
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
-    <View className="flex-1 bg-white px-6 pt-14">
-      <Text className="text-[16px] font-semibold text-black">Quase lá!</Text>
-      <Text className="mt-2 text-[10px] text-gray-500">
-        Vamos abrir uma página segura do Mercado Pago pra você confirmar a assinatura do seu
-        plano. Nenhum dado de cartão passa pelo nosso app.
-      </Text>
-
-      {promoCode ? (
-        <Text className="mt-3 text-[10px] text-green-600">
-          Código promocional aplicado: {promoCode}
-        </Text>
-      ) : null}
-
-      {error ? (
-        <Text className="mt-4 text-[10px] text-red-500">{error}</Text>
-      ) : null}
-
-      <TouchableOpacity
-          onPress={handleFinish}
-          disabled={isLoading}
-          className="mt-6 items-center rounded-xl bg-black py-3"
-        >
-          {isLoading ? (
-            <ActivityIndicator color="#fff" />
+    <View
+      className="flex-1 bg-white px-6"
+      style={{ paddingTop: insets.top + 24, paddingBottom: Math.max(insets.bottom, 16) + 16 }}
+    >
+      <View className="flex-1 items-center justify-center">
+        <View className="h-16 w-16 items-center justify-center rounded-full bg-[#F5F6F8]">
+          {done ? (
+            <CheckCircle2 size={30} color="#16A34A" strokeWidth={2} />
           ) : (
-            <Text className="text-[13px] font-semibold text-white">
-              Confirmar e continuar
-            </Text>
+            <PartyPopper size={28} color="#111827" strokeWidth={2} />
           )}
-        </TouchableOpacity>
+        </View>
 
-        <TouchableOpacity
-          onPress={async () => { await logout(); }}
-          className="mt-3 items-center py-2"
-        >
-          <Text className="text-[11px] text-gray-400">Ir para login</Text>
-        </TouchableOpacity>
+        <Text className="mt-5 text-center text-2xl font-bold text-[#111827]">
+          {done ? "Tudo pronto!" : "Falta só um passo"}
+        </Text>
+
+        <Text className="mt-2 text-center text-[13px] leading-5 text-gray-500">
+          {done
+            ? "Seu período de teste está ativo. Configure seus serviços e sua agenda — a cobrança só começa quando o teste acabar."
+            : "Vamos finalizar seu cadastro e liberar o período de teste gratuito."}
+        </Text>
+
+        {promoCode && !done ? (
+          <View className="mt-4 rounded-full bg-[#F5F6F8] px-4 py-2">
+            <Text className="text-[12px] font-semibold text-[#111827]">
+              Código {promoCode} aplicado
+            </Text>
+          </View>
+        ) : null}
+
+        {error ? (
+          <Text className="mt-4 text-center text-[13px] text-red-600">{error}</Text>
+        ) : null}
+      </View>
+
+      <View>
+        <Button
+          title={done ? "Entrar no app" : "Finalizar cadastro"}
+          onPress={done ? handleEnter : handleFinish}
+          loading={isLoading}
+        />
+        {!done ? (
+          <TouchableOpacity
+            onPress={async () => {
+              await logout();
+            }}
+            className="mt-2 h-11 items-center justify-center"
+          >
+            <Text className="text-[14px] font-medium text-gray-500">Sair</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
     </View>
   );
 }

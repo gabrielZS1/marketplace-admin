@@ -1,12 +1,11 @@
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { ChevronLeft, MapPin } from "lucide-react-native";
+import { Text, TouchableOpacity, View } from "react-native";
+import { MapPin, Search } from "lucide-react-native";
 import { useOnboardingStore } from "../../store/onboardingStore";
+import OnboardingScreen from "../../components/onboarding/OnboardingScreen";
+import Button from "../../components/ui/Button";
+import LocationMap from "../../components/LocationMap";
+import { stepIndex, TOTAL_ONBOARDING_STEPS } from "../../theme";
 
 export default function AddressScreen({ navigation }) {
   const selectedAddress = useOnboardingStore((state) => state.selectedAddress);
@@ -14,15 +13,9 @@ export default function AddressScreen({ navigation }) {
 
   const isValid = !!selectedAddress;
 
-  function handleAddressPress() {
-    navigation.navigate("AddressSearch");
-  }
-
   function handleContinue() {
     if (!isValid || isLoading) return;
-
     setIsLoading(true);
-
     navigation.navigate("AddressConfirmation", {
       address: selectedAddress.address,
       city: selectedAddress.city,
@@ -31,64 +24,56 @@ export default function AddressScreen({ navigation }) {
       latitude: selectedAddress.latitude,
       longitude: selectedAddress.longitude,
     });
-
     setIsLoading(false);
   }
 
   return (
-    <View className="flex-1 bg-white">
-      <View className="flex-1 px-4 pt-14">
-        <TouchableOpacity onPress={() => navigation.goBack()} className="mb-7">
-          <ChevronLeft size={24} color="#000" strokeWidth={2} />
-        </TouchableOpacity>
-
-        <View className="h-1 w-full overflow-hidden rounded-full bg-gray-200">
-          <View className="h-full rounded-full bg-green-500" style={{ width: "57%" }} />
-        </View>
-
-        <View className="mt-7">
-          <Text className="text-[16px] font-semibold text-black">Seu endereço</Text>
-          <Text className="mt-1 text-[7px] text-gray-400">
-            Onde seus clientes podem te encontrar?
-          </Text>
-        </View>
-
-        <View className="mt-7 h-[422px] overflow-hidden rounded-xl bg-[#d9d9d9]">
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={handleAddressPress}
-            className="mx-5 mt-5 h-9 flex-row items-center justify-center rounded-md bg-white"
-          >
-            <MapPin size={15} color="#000" fill="#000" strokeWidth={2} />
-            <Text
-              numberOfLines={1}
-              className="ml-1.5 max-w-[220px] text-[10px] font-semibold text-black"
-            >
-              {selectedAddress?.title || "Digite seu endereço"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <View className="px-4 pb-8">
-        <TouchableOpacity
-          disabled={!isValid || isLoading}
+    <OnboardingScreen
+      navigation={navigation}
+      step={stepIndex("Address")}
+      totalSteps={TOTAL_ONBOARDING_STEPS}
+      title="Onde os clientes te encontram?"
+      subtitle="Busque o endereço e confirme o ponto no mapa."
+      footer={
+        <Button
+          title="Continuar"
           onPress={handleContinue}
-          className="items-center rounded-xl bg-black py-3"
+          loading={isLoading}
+          disabled={!isValid}
+        />
+      }
+    >
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={() => navigation.navigate("AddressSearch")}
+        className="mb-4 h-14 flex-row items-center rounded-2xl border border-gray-200 bg-white px-4"
+      >
+        <Search size={18} color="#9CA3AF" strokeWidth={2} />
+        <Text
+          numberOfLines={1}
+          className={`ml-3 flex-1 text-[15px] ${
+            selectedAddress ? "font-medium text-[#111827]" : "text-gray-400"
+          }`}
         >
-          {isLoading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text className="text-[13px] font-semibold text-white">Continuar</Text>
-          )}
-        </TouchableOpacity>
+          {selectedAddress?.title || "Buscar endereço"}
+        </Text>
+      </TouchableOpacity>
 
-        {!isValid && (
-          <Text className="mt-4 text-center text-[7px] text-gray-400">
-            Por favor, insira seu endereço para continuar.
-          </Text>
-        )}
+      <View className="mb-2 flex-1 overflow-hidden rounded-2xl">
+        <LocationMap
+          latitude={selectedAddress?.latitude}
+          longitude={selectedAddress?.longitude}
+        />
       </View>
-    </View>
+
+      {!isValid && (
+        <View className="flex-row items-center justify-center py-1">
+          <MapPin size={13} color="#9CA3AF" strokeWidth={2} />
+          <Text className="ml-1.5 text-[12px] text-gray-400">
+            Busque um endereço para continuar
+          </Text>
+        </View>
+      )}
+    </OnboardingScreen>
   );
 }

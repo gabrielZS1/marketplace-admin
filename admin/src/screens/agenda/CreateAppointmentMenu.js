@@ -3,9 +3,8 @@ import { Animated, Text, TouchableOpacity, View } from "react-native";
 import { Plus } from "lucide-react-native";
 
 const OPTIONS = [
-  { key: "appointment", label: "Novo agendamento", dark: true },
-  { key: "block", label: "Novo bloqueio de horário", dark: false },
-  { key: "dayoff", label: "Adicionar Folga", dark: false },
+  { key: "block", label: "Bloquear horário", dark: true },
+  { key: "dayoff", label: "Adicionar folga", dark: false },
 ];
 
 export default function CreateAppointmentMenu({ navigation }) {
@@ -104,10 +103,6 @@ export default function CreateAppointmentMenu({ navigation }) {
 
                 if (option.key === "block") {
                   navigation.navigate("CreateTimeBlock");
-                }
-
-                if (option.key === "appointment") {
-                  navigation.navigate("CreateAppointment");
                 }
 
                 if (option.key === "dayoff") {

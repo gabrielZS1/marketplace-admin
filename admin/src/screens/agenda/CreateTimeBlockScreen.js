@@ -1,228 +1,116 @@
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import {
-  ChevronDown,
-  X,
-} from "lucide-react-native";
+import { Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { X } from "lucide-react-native";
+import dayjs from "dayjs";
+
+import { useBusinessStore } from "../../store/businessStore";
+import { useContentTopPadding } from "../../hooks/useContentTopPadding";
+import { scheduleApi, toIso } from "../../api/scheduleApi";
+import Button from "../../components/ui/Button";
+import DayStrip from "../../components/schedule/DayStrip";
+import TimeStepper, { timeToMinutes } from "../../components/ui/TimeStepper";
 
 export default function CreateTimeBlockScreen({ navigation }) {
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
+  const insets = useSafeAreaInsets();
+  const topPad = useContentTopPadding(10);
+  const businessId = useBusinessStore((s) => s.status?.id);
+
+  const [date, setDate] = useState(dayjs().format("YYYY-MM-DD"));
+  const [start, setStart] = useState("12:00");
+  const [end, setEnd] = useState("13:00");
   const [reason, setReason] = useState("");
-
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const isValid =
-    startTime.trim().length > 0 &&
-    endTime.trim().length > 0;
+  const isValid = timeToMinutes(end) > timeToMinutes(start);
 
   async function handleSave() {
-    if (!isValid || isLoading) return;
-
+    if (!isValid || isLoading || !businessId) return;
+    setError(null);
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-
-      const blockData = {
-        startTime,
-        endTime,
-        reason: reason.trim() || null,
-      };
-
-      console.log("Novo bloqueio:", blockData);
-
-      /*
-       * Futuramente:
-       *
-       * await appointmentApi.createTimeBlock(blockData);
-       *
-       * O backend deverá salvar:
-       * - businessId
-       * - startTime
-       * - endTime
-       * - reason
-       */
-
+      await scheduleApi.createTimeBlock(businessId, {
+        startsAt: toIso(date, start),
+        endsAt: toIso(date, end),
+        reason: reason.trim(),
+      });
       navigation.goBack();
-    } catch (error) {
-      console.error("Erro ao criar bloqueio:", error);
+    } catch (err) {
+      setError(err.message || "Não foi possível salvar o bloqueio.");
     } finally {
       setIsLoading(false);
     }
   }
 
-  function handleStartTime() {
-    // Futuramente abrir seletor de horário
-    console.log("Selecionar horário inicial");
-  }
-
-  function handleEndTime() {
-    // Futuramente abrir seletor de horário
-    console.log("Selecionar horário final");
-  }
-
   return (
-    <View className="flex-1 bg-white px-5 pt-14">
-
-      {/* HEADER */}
+    <View
+      className="flex-1 bg-white px-5"
+      style={{ paddingTop: topPad, paddingBottom: Math.max(insets.bottom, 16) + 8 }}
+    >
       <View className="flex-row items-center">
-
         <TouchableOpacity
-          activeOpacity={0.7}
           onPress={() => navigation.goBack()}
-          className="mr-5"
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          className="mr-3 h-9 w-9 items-center justify-center rounded-full bg-gray-100"
         >
-          <X
-            size={24}
-            color="#000"
-            strokeWidth={2}
-          />
+          <X size={20} color="#111827" strokeWidth={2.2} />
         </TouchableOpacity>
+        <Text className="text-2xl font-bold text-[#111827]">Bloquear horário</Text>
+      </View>
 
-        <Text className="text-[18px] font-bold text-black">
-          Novo bloqueio de horário
+      <Text className="mt-2 text-[13px] leading-5 text-gray-500">
+        Fecha a agenda do estabelecimento nesse período — ninguém consegue agendar.
+      </Text>
+
+      <View className="mt-6 flex-1">
+        <Text className="mb-2 text-[12px] font-medium uppercase tracking-wide text-gray-400">
+          Dia
         </Text>
+        <DayStrip value={date} onChange={setDate} />
 
-      </View>
-
-      {/* HORÁRIOS */}
-      <View className="mt-8 flex-row">
-
-        {/* INÍCIO */}
-        <View className="mr-3 flex-1">
-
-          <View className="relative">
-
-            {/* LABEL */}
-            <View className="absolute left-3 top-[-6px] z-10 bg-white px-1">
-              <Text className="text-[7px] text-gray-400">
-                INÍCIO
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={handleStartTime}
-              className="h-14 flex-row items-center justify-between rounded-xl border border-gray-200 px-3"
-            >
-              <Text
-                className={
-                  startTime
-                    ? "text-[13px] font-medium text-black"
-                    : "text-[13px] text-gray-400"
-                }
-              >
-                {startTime || "Selecionar horário"}
-              </Text>
-
-              <ChevronDown
-                size={18}
-                color="#999"
-                strokeWidth={1.8}
-              />
-            </TouchableOpacity>
-
-          </View>
-
+        <View className="mt-6 flex-row" style={{ gap: 12 }}>
+          <TimeStepper label="Início" value={start} onChange={setStart} />
+          <TimeStepper label="Fim" value={end} onChange={setEnd} />
         </View>
 
-        {/* FIM */}
-        <View className="flex-1">
-
-          <View className="relative">
-
-            {/* LABEL */}
-            <View className="absolute left-3 top-[-6px] z-10 bg-white px-1">
-              <Text className="text-[7px] text-gray-400">
-                FIM
-              </Text>
-            </View>
-
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={handleEndTime}
-              className="h-14 flex-row items-center justify-between rounded-xl border border-gray-200 px-3"
-            >
-              <Text
-                className={
-                  endTime
-                    ? "text-[13px] font-medium text-black"
-                    : "text-[13px] text-gray-400"
-                }
-              >
-                {endTime || "Selecionar horário"}
-              </Text>
-
-              <ChevronDown
-                size={18}
-                color="#999"
-                strokeWidth={1.8}
-              />
-            </TouchableOpacity>
-
-          </View>
-
-        </View>
-
-      </View>
-
-      {/* MOTIVO */}
-      <View className="mt-5">
-
-        <TextInput
-          value={reason}
-          onChangeText={setReason}
-          placeholder="Motivo"
-          placeholderTextColor="#999"
-          multiline
-          textAlignVertical="top"
-          className="min-h-[54px] rounded-xl border border-gray-200 px-3 py-4 text-[13px] text-black"
-        />
-
-      </View>
-
-      {/* ESPAÇO */}
-      <View className="flex-1" />
-
-      {/* RODAPÉ */}
-      <View className="flex-row items-center pb-8">
-
-        {/* CANCELAR */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={() => navigation.goBack()}
-          className="mr-4 h-12 flex-1 items-center justify-center rounded-xl border border-gray-300 bg-white"
-        >
-          <Text className="text-[13px] font-semibold text-black">
-            CANCELAR
+        {!isValid ? (
+          <Text className="mt-3 text-[12px] text-red-600">
+            O fim precisa ser depois do início.
           </Text>
-        </TouchableOpacity>
+        ) : null}
 
-        {/* SALVAR */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          disabled={!isValid || isLoading}
-          onPress={handleSave}
-          className={`h-12 flex-1 items-center justify-center rounded-xl ${
-            isValid ? "bg-black" : "bg-gray-300"
-          }`}
-        >
-          {isLoading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text className="text-[13px] font-semibold text-white">
-              SALVAR
-            </Text>
-          )}
-        </TouchableOpacity>
+        <View className="mt-6">
+          <View className="absolute left-3 top-[-8px] z-10 bg-white px-1.5">
+            <Text className="text-[11px] font-medium text-gray-400">Motivo (opcional)</Text>
+          </View>
+          <TextInput
+            value={reason}
+            onChangeText={setReason}
+            placeholder="Ex.: almoço, manutenção, evento"
+            placeholderTextColor="#9CA3AF"
+            className="h-14 rounded-2xl border border-gray-200 px-4 text-[15px] text-[#111827]"
+          />
+        </View>
 
+        {error ? (
+          <Text className="mt-3 text-[13px] text-red-600">{error}</Text>
+        ) : null}
       </View>
 
+      <View className="flex-row" style={{ gap: 12 }}>
+        <View className="flex-1">
+          <Button title="Cancelar" variant="outline" onPress={() => navigation.goBack()} />
+        </View>
+        <View className="flex-1">
+          <Button
+            title="Bloquear"
+            onPress={handleSave}
+            loading={isLoading}
+            disabled={!isValid}
+          />
+        </View>
+      </View>
     </View>
   );
 }

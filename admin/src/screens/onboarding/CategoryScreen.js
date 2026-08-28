@@ -1,22 +1,48 @@
 import { useState } from "react";
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator } from "react-native";
-import { ChevronLeft, ChevronRight } from "lucide-react-native";
+import { Text, View } from "react-native";
+import {
+  Scissors,
+  Hand,
+  Sparkles,
+  Eye,
+  Droplet,
+  HeartPulse,
+  Flower2,
+  Palette,
+  LayoutGrid,
+} from "lucide-react-native";
 import { useOnboardingStore } from "../../store/onboardingStore";
+import OnboardingScreen from "../../components/onboarding/OnboardingScreen";
+import OptionCard from "../../components/ui/OptionCard";
+import Button from "../../components/ui/Button";
+import { stepIndex, TOTAL_ONBOARDING_STEPS } from "../../theme";
 
 const MAIN_CATEGORIES = [
-  { value: "BARBERSHOP", label: "Barbeiros" },
-  { value: "MANICURE", label: "Manicure" },
-  { value: "HAIRDRESSER", label: "Cabeleireiro" },
-  { value: "EYEBROWS_LASHES", label: "Sobrancelhas e cílios" },
-  { value: "SKINCARE", label: "Cuidados com a pele" },
-  { value: "WELLNESS", label: "Saúde e bem-estar" },
+  { value: "BARBERSHOP", label: "Barbearia", Icon: Scissors },
+  { value: "MANICURE", label: "Manicure", Icon: Hand },
+  { value: "HAIRDRESSER", label: "Cabeleireiro", Icon: Sparkles },
+  { value: "EYEBROWS_LASHES", label: "Sobrancelhas e cílios", Icon: Eye },
+  { value: "SKINCARE", label: "Cuidados com a pele", Icon: Droplet },
+  { value: "WELLNESS", label: "Saúde e bem-estar", Icon: HeartPulse },
 ];
 
 const OTHER_CATEGORIES = [
-  { value: "SPA", label: "Dia de SPA" },
-  { value: "MAKEUP", label: "Maquiagem" },
-  { value: "OTHER", label: "Outros" },
+  { value: "SPA", label: "Dia de SPA", Icon: Flower2 },
+  { value: "MAKEUP", label: "Maquiagem", Icon: Palette },
+  { value: "OTHER", label: "Outros", Icon: LayoutGrid },
 ];
+
+function CategoryIcon({ Icon, selected }) {
+  return (
+    <View
+      className={`h-10 w-10 items-center justify-center rounded-xl ${
+        selected ? "bg-[#111827]" : "bg-gray-100"
+      }`}
+    >
+      <Icon size={18} color={selected ? "#fff" : "#6B7280"} strokeWidth={2} />
+    </View>
+  );
+}
 
 export default function CategoryScreen({ navigation }) {
   const [selected, setSelected] = useState(null);
@@ -33,85 +59,51 @@ export default function CategoryScreen({ navigation }) {
   }
 
   return (
-    <View className="flex-1 bg-white">
-      <ScrollView className="flex-1 px-6 pt-16" contentContainerStyle={{ paddingBottom: 24 }}>
-        <TouchableOpacity onPress={() => navigation.goBack()} className="mb-6">
-          <ChevronLeft size={24} color="#000" />
-        </TouchableOpacity>
-
-        {/* Barra de progresso */}
-        <View className="h-1 bg-gray-100 rounded-full mb-8 overflow-hidden">
-          <View className="h-full bg-green-500" style={{ width: "14%" }} />
-        </View>
-
-        <Text className="text-2xl font-semibold mb-2">
-          Qual é o ramo de atividade da sua empresa?
-        </Text>
-        <Text className="text-gray-500 mb-6">
-          Selecione a categoria que você acha que melhor representa a atividade da sua empresa.
-        </Text>
-
-        <View className="flex-row flex-wrap justify-between mb-8">
-          {MAIN_CATEGORIES.map((cat) => {
-            const isSelected = selected === cat.value;
-            return (
-              <TouchableOpacity
-                key={cat.value}
-                className="w-[30%] items-center mb-6"
-                onPress={() => setSelected(cat.value)}
-              >
-                <View
-                  className={`w-20 h-20 rounded-full mb-2 ${
-                    isSelected ? "bg-black" : "bg-gray-200"
-                  }`}
-                />
-                <Text
-                  className={`text-center text-xs ${
-                    isSelected ? "font-semibold text-black" : "text-gray-600"
-                  }`}
-                >
-                  {cat.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        <Text className="text-gray-400 text-sm mb-2">Outras categorias</Text>
-        {OTHER_CATEGORIES.map((cat) => {
-          const isSelected = selected === cat.value;
-          return (
-            <TouchableOpacity
-              key={cat.value}
-              className={`flex-row justify-between items-center py-4 border-b border-gray-100 ${
-                isSelected ? "bg-gray-50" : ""
-              }`}
-              onPress={() => setSelected(cat.value)}
-            >
-              <Text className={isSelected ? "font-semibold" : ""}>{cat.label}</Text>
-              <ChevronRight size={18} color="#9CA3AF" />
-            </TouchableOpacity>
-          );
-        })}
-
-        {error ? <Text className="text-red-500 text-sm mt-4">{error}</Text> : null}
-      </ScrollView>
-
-      <View className="px-6 pb-8 pt-4 border-t border-gray-100">
-        <TouchableOpacity
-          className={`rounded-xl py-4 items-center ${selected ? "bg-black" : "bg-gray-200"}`}
-          disabled={!selected || isLoading}
+    <OnboardingScreen
+      navigation={navigation}
+      step={stepIndex("Category")}
+      totalSteps={TOTAL_ONBOARDING_STEPS}
+      title="Qual é o ramo da sua empresa?"
+      subtitle="Escolha a categoria que melhor representa o seu trabalho."
+      scroll
+      footer={
+        <Button
+          title="Continuar"
           onPress={handleContinue}
-        >
-          {isLoading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text className={selected ? "text-white font-semibold" : "text-gray-400 font-semibold"}>
-              Continuar
-            </Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </View>
+          loading={isLoading}
+          disabled={!selected}
+        />
+      }
+    >
+      {MAIN_CATEGORIES.map((cat) => (
+        <OptionCard
+          key={cat.value}
+          title={cat.label}
+          selected={selected === cat.value}
+          onPress={() => setSelected(cat.value)}
+          control="radio"
+          icon={<CategoryIcon Icon={cat.Icon} selected={selected === cat.value} />}
+        />
+      ))}
+
+      <Text className="mb-3 mt-4 text-[12px] font-medium uppercase tracking-wide text-gray-400">
+        Outras categorias
+      </Text>
+
+      {OTHER_CATEGORIES.map((cat) => (
+        <OptionCard
+          key={cat.value}
+          title={cat.label}
+          selected={selected === cat.value}
+          onPress={() => setSelected(cat.value)}
+          control="radio"
+          icon={<CategoryIcon Icon={cat.Icon} selected={selected === cat.value} />}
+        />
+      ))}
+
+      {error ? (
+        <Text className="mt-3 text-[13px] text-red-600">{error}</Text>
+      ) : null}
+    </OnboardingScreen>
   );
 }

@@ -5,8 +5,18 @@ import AuthStack from "./AuthStack";
 import OnboardingStack from "./OnboardingStack";
 import AdminTabs from "./AdminTabs";
 import TrialExpiredScreen from "../screens/subscription/TrialExpiredScreen";
+import SubscriptionBanner from "../components/SubscriptionBanner";
 import { useAuthStore } from "../store/authStore";
 import { useBusinessStore } from "../store/businessStore";
+
+function isBlocked(status) {
+  if (!status) return false;
+  if (status.active === false) return true;
+  return (
+    status.subscriptionStatus === "EXPIRED" ||
+    status.subscriptionStatus === "SUSPENDED"
+  );
+}
 
 export default function RootNavigator() {
   const [isRestoring, setIsRestoring] = useState(true);
@@ -26,7 +36,7 @@ export default function RootNavigator() {
     if (token) fetchBusinessStatus();
   }, [token]);
 
-  if (isRestoring || (token && isCheckingBusiness)) {
+  if (isRestoring || (token && isCheckingBusiness && !businessStatus)) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
         <ActivityIndicator size="large" color="#000" />
@@ -41,13 +51,16 @@ export default function RootNavigator() {
       return <OnboardingStack />;
     }
 
-    if (businessStatus.subscriptionStatus === "SUSPENDED") {
-      return <TrialExpiredScreen businessId={businessStatus.id} />;
+    if (isBlocked(businessStatus)) {
+      return <TrialExpiredScreen status={businessStatus} />;
     }
 
-    
-
-    return <AdminTabs />;
+    return (
+      <View className="flex-1">
+        <SubscriptionBanner />
+        <AdminTabs />
+      </View>
+    );
   }
 
   return <NavigationContainer>{renderContent()}</NavigationContainer>;

@@ -11,6 +11,14 @@ export const serviceApi = {
     return data;
   },
 
+  async update(businessId, serviceId, patch) {
+    const { data } = await apiClient.patch(
+      `/businesses/${businessId}/services/${serviceId}`,
+      patch
+    );
+    return data;
+  },
+
   async remove(businessId, serviceId) {
     await apiClient.delete(`/businesses/${businessId}/services/${serviceId}`);
   },

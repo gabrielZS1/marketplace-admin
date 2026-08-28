@@ -1,9 +1,11 @@
 import { apiClient } from "./client";
 
 export const businessApi = {
+  // Status da assinatura do negócio do dono logado.
+  // Sempre liberado pelo backend, mesmo com a assinatura bloqueada.
   async getMyStatus() {
     try {
-      const { data } = await apiClient.get("/businesses/mine/status");
+      const { data } = await apiClient.get("/businesses/me");
       return data;
     } catch (err) {
       if (err.response?.status === 404) {
@@ -16,6 +18,12 @@ export const businessApi = {
   async getDetails(businessId) {
     const { data } = await apiClient.get(`/businesses/${businessId}`);
     return data;
+  },
+
+  // Horários do estabelecimento (só os de nível empresa, sem os específicos de funcionário)
+  async getWorkingHours(businessId) {
+    const { data } = await apiClient.get(`/businesses/${businessId}/working-hours`);
+    return (Array.isArray(data) ? data : []).filter((w) => !w.employeeId);
   },
 
   async updateDetails(businessId, data) {
@@ -44,6 +52,15 @@ export const businessApi = {
     );
 
     return data;
+  },
+
+  async listPhotos(businessId) {
+    const { data } = await apiClient.get(`/businesses/${businessId}/photos`);
+    return Array.isArray(data) ? data : [];
+  },
+
+  async deletePhoto(businessId, photoId) {
+    await apiClient.delete(`/businesses/${businessId}/photos/${photoId}`);
   },
 
   async uploadPhoto(businessId, imageUri, category = "PORTFOLIO") {

@@ -1,224 +1,137 @@
+import { Alert, Text, TouchableOpacity, View } from "react-native";
 import {
-  ChevronLeft,
-  Search,
-  CheckCircle,
-  List,
-  CalendarDays,
-  Users,
-  Gift,
-  Package,
-  CreditCard,
   Building2,
-  CalendarCheck,
-  Settings,
-  UserRound,
-  Wallet,
+  Scissors,
+  Clock,
+  Users,
+  CreditCard,
+  Bell,
   LogOut,
+  ChevronRight,
+  Gift,
 } from "lucide-react-native";
 
-import {
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
-
 import { useAuthStore } from "../../store/authStore";
+import Screen from "../../components/ui/Screen";
 
-const OPTIONS = [
+const SECTIONS = [
   {
-    title: "Programa de Cartões de Fidelidade",
-    description:
-      "Crie cartões de fidelidade para clientes e acompanhe suas recompensas.",
-    icon: CheckCircle,
+    title: "Negócio",
+    items: [
+      {
+        label: "Personalizar empresa",
+        hint: "Nome, logo, fotos, endereço e contato",
+        icon: Building2,
+        target: "BusinessDetails",
+      },
+      {
+        label: "Serviços",
+        hint: "O que você oferece, preços e duração",
+        icon: Scissors,
+        target: "ManageServices",
+      },
+      {
+        label: "Cartões-presente",
+        hint: "Pacotes que os clientes podem comprar de presente",
+        icon: Gift,
+        target: "GiftCards",
+      },
+      {
+        label: "Horário de funcionamento",
+        hint: "Dias e horários que você atende",
+        icon: Clock,
+        target: "ManageHours",
+      },
+      {
+        label: "Equipe",
+        hint: "Profissionais do estabelecimento",
+        icon: Users,
+        target: "Funcionarios",
+      },
+    ],
   },
   {
-    title: "Configurações de Serviços",
-    description:
-      "Permita que clientes comprem cartões presentes e compartilhem o seu talento com seus familiares e amigos.",
-    icon: List,
+    title: "Assinatura",
+    items: [
+      {
+        label: "Plano e cobrança",
+        hint: "Seu plano, período de teste e pagamento",
+        icon: CreditCard,
+        target: "Billing",
+      },
+    ],
   },
   {
-    title: "Gerenciamento de horários",
-    description:
-      "Insira os horários e dias que funcionam regularmente ou combine um ou mais serviços em um pacote.",
-    icon: CalendarDays,
-  },
-  {
-    title: "Gestão de Funcionários",
-    description:
-      "Adicione novos funcionários, defina permissões e ajuste detalhes da equipe.",
-    icon: Users,
-  },
-  {
-    title: "Cartões Presente",
-    description:
-      "Permita que clientes comprem cartões presentes e compartilhem o seu talento com seus familiares e amigos.",
-    icon: Gift,
-  },
-  {
-    title: "Pacotes",
-    description:
-      "Incentive seus clientes a te visitarem regularmente ao combinar um ou mais serviços em um pacote.",
-    icon: Package,
-  },
-  {
-    title: "Assinaturas",
-    description:
-      "Ofereça assinaturas para que seus clientes agendem mais serviços regularmente.",
-    icon: CreditCard,
-  },
-  {
-    title: "Detalhes da Empresa",
-    description:
-      "Adicione informações sobre sua marca, altere configurações de localização e critérios do seu conhecimento para clientes.",
-    icon: Building2,
-  },
-  {
-    title: "Agendamentos Online",
-    description:
-      "Onde seus clientes podem te encontrar?",
-    icon: CalendarCheck,
-  },
-  {
-    title: "Opções avançadas",
-    description:
-      "Configurações de reservas, lembretes e outras opções.",
-    icon: Settings,
-  },
-  {
-    title: "Configurações personalizadas",
-    description:
-      "Defina suas preferências de notificação e altere entre perfis de empresa.",
-    icon: UserRound,
-  },
-  {
-    title: "Assinatura e cobranças",
-    description:
-      "Gerencie sua assinatura, valores e opções de pagamento.",
-    icon: Wallet,
+    title: "App",
+    items: [
+      {
+        label: "Notificações",
+        hint: "Avisos de novos agendamentos neste aparelho",
+        icon: Bell,
+        target: "NotificationSettings",
+      },
+    ],
   },
 ];
+
+function Row({ item, onPress, last }) {
+  const Icon = item.icon;
+  return (
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={onPress}
+      className={`flex-row items-center py-4 ${last ? "" : "border-b border-gray-100"}`}
+    >
+      <View className="h-10 w-10 items-center justify-center rounded-xl bg-gray-100">
+        <Icon size={18} color="#374151" strokeWidth={2} />
+      </View>
+      <View className="ml-3 flex-1">
+        <Text className="text-[15px] font-semibold text-[#111827]">{item.label}</Text>
+        <Text className="mt-0.5 text-[12px] text-gray-400">{item.hint}</Text>
+      </View>
+      <ChevronRight size={18} color="#9CA3AF" strokeWidth={2} />
+    </TouchableOpacity>
+  );
+}
 
 export default function SettingsScreen({ navigation }) {
   const logout = useAuthStore((state) => state.logout);
 
+  function confirmLogout() {
+    Alert.alert("Sair da conta", "Você vai precisar entrar de novo neste aparelho.", [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Sair", style: "destructive", onPress: () => logout() },
+    ]);
+  }
+
   return (
-    <View className="flex-1 bg-white">
-
-      <View className="px-5 pt-14">
-
-        <View className="flex-row items-center">
-
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            className="mr-3"
-          >
-            <ChevronLeft
-              size={25}
-              color="#000"
-              strokeWidth={2}
-            />
-          </TouchableOpacity>
-
-          <Text className="text-[20px] font-bold text-black">
-            Configurações
+    <Screen navigation={navigation} title="Configurações">
+      {SECTIONS.map((section) => (
+        <View key={section.title} className="mb-6">
+          <Text className="mb-1 text-[12px] font-semibold uppercase tracking-wide text-gray-400">
+            {section.title}
           </Text>
-
-        </View>
-
-        <View className="mt-5 h-10 flex-row items-center rounded-xl bg-gray-200 px-3">
-
-          <Search
-            size={17}
-            color="#aaa"
-          />
-
-          <TextInput
-            placeholder="Pesquisar nas configurações..."
-            placeholderTextColor="#999"
-            className="ml-2 flex-1 text-[11px] text-black"
-          />
-
-        </View>
-
-      </View>
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingHorizontal: 20,
-          paddingTop: 22,
-          paddingBottom: 40,
-        }}
-      >
-
-        {OPTIONS.map((option, index) => {
-
-          const Icon = option.icon;
-
-          return (
-            <TouchableOpacity
-              key={index}
-              activeOpacity={0.7}
-              className="min-h-[78px] flex-row border-b border-gray-200 py-4"
-            >
-
-              <View className="w-8 items-center justify-start pt-1">
-                <Icon
-                  size={23}
-                  color="#000"
-                  strokeWidth={2}
-                />
-              </View>
-
-              <View className="ml-3 flex-1 pr-2">
-
-                <Text className="text-[13px] font-semibold text-black">
-                  {option.title}
-                </Text>
-
-                <Text className="mt-1 text-[9px] leading-3 text-gray-400">
-                  {option.description}
-                </Text>
-
-              </View>
-
-            </TouchableOpacity>
-          );
-        })}
-
-        <TouchableOpacity
-          activeOpacity={0.7}
-          onPress={logout}
-          className="min-h-[78px] flex-row border-b border-gray-200 py-4"
-        >
-
-          <View className="w-8 items-center justify-start pt-1">
-            <LogOut
-              size={23}
-              color="#000"
-              strokeWidth={2}
+          {section.items.map((item, i) => (
+            <Row
+              key={item.label}
+              item={item}
+              last={i === section.items.length - 1}
+              onPress={() => navigation.navigate(item.target)}
             />
-          </View>
+          ))}
+        </View>
+      ))}
 
-          <View className="ml-3 flex-1 pr-2">
-
-            <Text className="text-[13px] font-semibold text-black">
-              Sair
-            </Text>
-
-            <Text className="mt-1 text-[9px] leading-3 text-gray-400">
-              Sair da sua conta neste dispositivo.
-            </Text>
-
-          </View>
-
-        </TouchableOpacity>
-
-      </ScrollView>
-
-    </View>
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={confirmLogout}
+        className="mt-2 flex-row items-center py-4"
+      >
+        <View className="h-10 w-10 items-center justify-center rounded-xl bg-red-50">
+          <LogOut size={18} color="#DC2626" strokeWidth={2} />
+        </View>
+        <Text className="ml-3 text-[15px] font-semibold text-[#DC2626]">Sair da conta</Text>
+      </TouchableOpacity>
+    </Screen>
   );
 }

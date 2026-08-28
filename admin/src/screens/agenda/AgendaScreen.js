@@ -10,7 +10,9 @@ import { Bell, Settings, ChevronDown } from "lucide-react-native";
 import * as Notifications from "expo-notifications";
 
 import { useBusinessStore } from "../../store/businessStore";
+import { useContentTopPadding } from "../../hooks/useContentTopPadding";
 import { appointmentApi } from "../../api/appointmentApi";
+import { scheduleApi } from "../../api/scheduleApi";
 
 import {
   getBrasiliaNow,
@@ -29,7 +31,6 @@ import {
 import DiagonalPattern from "../../components/DiagonalPattern";
 import CreateAppointmentMenu from "./CreateAppointmentMenu";
 
-import BusinessSettingsMenu from "../profile/BusinessSettingsMenu";
 
 import NotificationsModal from "./NotificationsModal";
 import DateOptionsModal from "./DateOptionsModal";
@@ -40,12 +41,15 @@ const TIMELINE_WIDTH = SCREEN_WIDTH - SIDEBAR_WIDTH;
 
 export default function AgendaScreen({ navigation }) {
   const businessId = useBusinessStore((state) => state.status?.id);
+  const topPad = useContentTopPadding();
 
   // Estados
   const [updatingId, setUpdatingId] = useState(null);
   const [now, setNow] = useState(getBrasiliaNow());
   const [selectedDate, setSelectedDate] = useState(getBrasiliaNow());
   const [appointments, setAppointments] = useState([]);
+  const [timeBlocks, setTimeBlocks] = useState([]);
+  const [timeOffs, setTimeOffs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [notificationsModalVisible, setNotificationsModalVisible] =
     useState(false);
@@ -89,6 +93,12 @@ export default function AgendaScreen({ navigation }) {
       });
   }
 
+  function fetchSchedule() {
+    if (!businessId) return;
+    scheduleApi.listTimeBlocks(businessId).then(setTimeBlocks).catch(() => {});
+    scheduleApi.listTimeOffs(businessId).then(setTimeOffs).catch(() => {});
+  }
+
   // Busca os agendamentos ao montar a tela
   useEffect(() => {
     if (!businessId) return;
@@ -104,7 +114,18 @@ export default function AgendaScreen({ navigation }) {
       .finally(() => {
         setIsLoading(false);
       });
+
+    fetchSchedule();
   }, [businessId]);
+
+  // Recarrega ao voltar pra tela (ex: depois de criar um bloqueio/folga)
+  useEffect(() => {
+    const unsub = navigation.addListener("focus", () => {
+      fetchAppointments();
+      fetchSchedule();
+    });
+    return unsub;
+  }, [navigation, businessId]);
 
   // Recarrega os agendamentos automaticamente quando uma notificação push
   // chega (cliente fez um novo agendamento), mesmo com o app já aberto
@@ -119,6 +140,22 @@ export default function AgendaScreen({ navigation }) {
   // Agendamentos do dia selecionado
   const dayAppointments = appointments.filter((appointment) =>
     isSameDay(new Date(appointment.startsAt), selectedDate),
+  );
+
+  // Bloqueios / folgas que tocam o dia selecionado
+  function overlapsSelectedDay(startsAt, endsAt) {
+    const dayStart = new Date(selectedDate);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(selectedDate);
+    dayEnd.setHours(23, 59, 59, 999);
+    return new Date(startsAt) <= dayEnd && new Date(endsAt) >= dayStart;
+  }
+
+  const dayBlocks = timeBlocks.filter((b) =>
+    overlapsSelectedDay(b.startsAt, b.endsAt),
+  );
+  const dayOffs = timeOffs.filter((o) =>
+    overlapsSelectedDay(o.startsAt, o.endsAt),
   );
 
   // Abre o modal de notificações já recarregando os dados
@@ -186,7 +223,10 @@ export default function AgendaScreen({ navigation }) {
   return (
     <View className="flex-1 bg-white">
       {/* ================= HEADER ================= */}
-      <View className="flex-row items-center justify-between px-6 pt-16">
+      <View
+        className="flex-row items-center justify-between px-6"
+        style={{ paddingTop: topPad }}
+      >
         {/* Notificações */}
         <TouchableOpacity onPress={openNotifications}>
           <Bell size={28} color="#000" />
@@ -215,7 +255,7 @@ export default function AgendaScreen({ navigation }) {
 
         {/* Configurações */}
         <TouchableOpacity
-          onPress={() => navigation.navigate("BusinessSettingsMenu")}
+          onPress={() => navigation.navigate("Perfil", { screen: "Settings" })}
         >
           <Settings size={28} color="#000" />
         </TouchableOpacity>
@@ -301,6 +341,61 @@ export default function AgendaScreen({ navigation }) {
                 className="border-t border-gray-400/30"
               />
             ))}
+
+            {/* Bloqueios e folgas */}
+            {[
+              ...dayBlocks.map((b) => ({ ...b, kind: "block" })),
+              ...dayOffs.map((o) => ({ ...o, kind: "off" })),
+            ].map((item) => {
+              const rawTop = minutesToY(
+                getMinutesFromStart(new Date(item.startsAt)),
+              );
+              const rawBottom = minutesToY(
+                getMinutesFromStart(new Date(item.endsAt)),
+              );
+              const top = Math.max(0, rawTop);
+              const height = Math.max(
+                24,
+                Math.min(timelineHeight, rawBottom) - top,
+              );
+              const isBlock = item.kind === "block";
+              return (
+                <View
+                  key={`${item.kind}-${item.id}`}
+                  style={{
+                    position: "absolute",
+                    top,
+                    height,
+                    left: 0,
+                    width: TIMELINE_WIDTH,
+                    backgroundColor: isBlock
+                      ? "rgba(17,24,39,0.10)"
+                      : "rgba(180,83,9,0.10)",
+                  }}
+                  className="justify-center border-l-2"
+                >
+                  <View
+                    style={{
+                      position: "absolute",
+                      left: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: 3,
+                      backgroundColor: isBlock ? "#111827" : "#B45309",
+                    }}
+                  />
+                  <Text
+                    numberOfLines={1}
+                    className="px-3 text-[10px] font-semibold"
+                    style={{ color: isBlock ? "#111827" : "#B45309" }}
+                  >
+                    {isBlock
+                      ? item.reason || "Estabelecimento fechado"
+                      : `Folga · ${item.employeeName}${item.reason ? " — " + item.reason : ""}`}
+                  </Text>
+                </View>
+              );
+            })}
 
             {/* Linha do horário atual */}
             {showCurrentTimeLine && (

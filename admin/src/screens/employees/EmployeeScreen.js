@@ -20,6 +20,7 @@ import {
 } from "../../api/employeeApi";
 
 import { useBusinessStore } from "../../store/businessStore";
+import { useContentTopPadding } from "../../hooks/useContentTopPadding";
 
 export default function EmployeeScreen({ navigation }) {
   const businessStatus = useBusinessStore(
@@ -27,6 +28,7 @@ export default function EmployeeScreen({ navigation }) {
   );
 
   const businessId = businessStatus?.id;
+  const topPad = useContentTopPadding();
 
   const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -150,7 +152,7 @@ export default function EmployeeScreen({ navigation }) {
   <View className="flex-1 bg-white">
 
     {/* HEADER */}
-    <View className="px-5 pb-6 pt-14">
+    <View className="px-5 pb-6" style={{ paddingTop: topPad }}>
       <View className="flex-row items-center justify-between">
 
         <View className="flex-1">

@@ -3,9 +3,12 @@ import { authApi } from "../api/authApi";
 import { apiClient } from "../api/client";
 import { secureStorage } from "../utils/secureStorage";
 import { registerForPushNotificationsAsync } from "../../pushNotifications";
+import { getNotificationsEnabled } from "../utils/notificationPref";
 
 async function setupPushNotifications() {
   try {
+    if (!(await getNotificationsEnabled())) return;
+
     const token = await registerForPushNotificationsAsync();
     if (token) {
       await apiClient.patch("/businesses/me/push-token", {

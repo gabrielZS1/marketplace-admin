@@ -1,16 +1,18 @@
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
-import { ChevronLeft, MapPin } from "lucide-react-native";
 import { useState } from "react";
-
+import { Text, View } from "react-native";
+import { MapPin } from "lucide-react-native";
 import { useOnboardingStore } from "../../store/onboardingStore";
 import { onboardingApi } from "../../api/onboardingApi";
+import OnboardingScreen from "../../components/onboarding/OnboardingScreen";
+import Button from "../../components/ui/Button";
+import LocationMap from "../../components/LocationMap";
+import { stepIndex, TOTAL_ONBOARDING_STEPS } from "../../theme";
 
 export default function LocationConfirmationScreen({ navigation, route }) {
   const [isLoading, setIsLoading] = useState(false);
-  const businessId = useOnboardingStore((state) => state.businessId);
   const [error, setError] = useState(null);
+  const businessId = useOnboardingStore((state) => state.businessId);
 
-  // Endereço recebido da tela anterior
   const address = route?.params?.address;
   const city = route?.params?.city;
   const state = route?.params?.state || "SP";
@@ -18,107 +20,57 @@ export default function LocationConfirmationScreen({ navigation, route }) {
   const longitude = route?.params?.longitude;
 
   async function handleContinue() {
-  if (isLoading) return;
-  if (!businessId || !latitude || !longitude) {
-    setError("Endereço incompleto. Volte e selecione o endereço novamente.");
-    return;
+    if (isLoading) return;
+    if (!businessId || !latitude || !longitude) {
+      setError("Endereço incompleto. Volte e selecione o endereço novamente.");
+      return;
+    }
+    setError(null);
+    setIsLoading(true);
+    try {
+      await onboardingApi.address(businessId, { address, city, state, latitude, longitude });
+      navigation.navigate("TeamSize");
+    } catch (err) {
+      setError(err.message || "Não foi possível salvar. Tente novamente.");
+    } finally {
+      setIsLoading(false);
+    }
   }
-
-  setError(null);
-  setIsLoading(true);
-  try {
-    await onboardingApi.address(businessId, { address, city, state, latitude, longitude });
-    navigation.navigate("TeamSize");
-  } catch (err) {
-    setError(err.message || "Não foi possível salvar. Tente novamente.");
-  } finally {
-    setIsLoading(false);
-  }
-}
 
   return (
-    <View className="flex-1 bg-white">
-      {/* CONTEÚDO */}
-      <View className="flex-1 px-4 pt-14">
+    <OnboardingScreen
+      navigation={navigation}
+      step={stepIndex("LocationConfirmation")}
+      totalSteps={TOTAL_ONBOARDING_STEPS}
+      title="O pino está certo?"
+      subtitle="É esse ponto que os clientes vão ver no mapa."
+      footer={
+        <Button
+          title="Sim, confirmar"
+          onPress={handleContinue}
+          loading={isLoading}
+        />
+      }
+    >
+      <View className="mb-2 flex-1 overflow-hidden rounded-2xl">
+        <LocationMap latitude={latitude} longitude={longitude} />
+      </View>
 
-        {/* VOLTAR + TÍTULO */}
-        <View className="flex-row items-center">
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            className="mr-3"
-          >
-            <ChevronLeft
-              size={24}
-              color="#000"
-              strokeWidth={2}
-            />
-          </TouchableOpacity>
-
-          <Text className="text-[13px] font-semibold text-black">
-            O pino está no lugar certo, Gabriel?
+      <View className="flex-row items-center rounded-2xl border border-gray-200 bg-white px-4 py-3">
+        <MapPin size={18} color="#111827" strokeWidth={2} />
+        <View className="ml-3 flex-1">
+          <Text numberOfLines={1} className="text-[14px] font-semibold text-[#111827]">
+            {address}
+          </Text>
+          <Text className="mt-0.5 text-[12px] text-gray-400">
+            {[city, state].filter(Boolean).join(", ")}
           </Text>
         </View>
-
-        {/* PROGRESSO */}
-        <View className="mt-7 h-1 w-full overflow-hidden rounded-full bg-gray-200">
-          <View
-            className="h-full rounded-full bg-green-500"
-            style={{ width: "63%" }}
-          />
-        </View>
-
-        {/* MAPA */}
-        <View className="mt-7 h-[490px] overflow-hidden rounded-xl bg-[#d9d9d9]">
-
-          {/* ENDEREÇO SOBRE O MAPA */}
-          <View className="mx-5 mt-6 h-9 flex-row items-center rounded-md bg-white px-2">
-
-            <View className="mr-2 h-7 w-7 items-center justify-center">
-              <MapPin
-                size={20}
-                color="#cfcfcf"
-                fill="#cfcfcf"
-                strokeWidth={1.5}
-              />
-            </View>
-
-            <View className="flex-1">
-              <Text
-                numberOfLines={1}
-                className="text-[8px] font-semibold text-gray-700"
-              >
-                {address}
-              </Text>
-
-              <Text className="mt-0.5 text-[6px] text-gray-400">
-                {city}
-              </Text>
-            </View>
-          </View>
-
-        </View>
-
-        {error ? (
-          <Text className="mt-3 text-[9px] text-red-500">{error}</Text>
-        ) : null}
       </View>
 
-      {/* RODAPÉ */}
-      <View className="px-4 pb-8">
-        <TouchableOpacity
-          disabled={isLoading}
-          onPress={handleContinue}
-          className="items-center rounded-xl bg-black py-3"
-        >
-          {isLoading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text className="text-[13px] font-semibold text-white">
-              Continuar
-            </Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </View>
+      {error ? (
+        <Text className="mt-3 text-[13px] text-red-600">{error}</Text>
+      ) : null}
+    </OnboardingScreen>
   );
 }
