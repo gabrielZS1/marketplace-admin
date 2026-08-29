@@ -1,13 +1,16 @@
 import axios from "axios";
 import { secureStorage } from "../utils/secureStorage";
 
-// Troque pelo IP da sua máquina na rede local quando testar no celular físico
-// (localhost não funciona em dispositivo físico, só no emulador Android com 10.0.2.2)
-const BASE_URL = "http://192.168.15.27:8082/api";
+// Definido em .env como EXPO_PUBLIC_API_URL (Expo injeta no build).
+// Fallback = backend de staging no Render.
+const BASE_URL =
+  process.env.EXPO_PUBLIC_API_URL ||
+  "https://glowly-backend-fkqe.onrender.com/api";
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
-  timeout: 15000,
+  // Render free hiberna após 15 min → 1ª requisição pode levar ~50s.
+  timeout: 60000,
 });
 
 apiClient.interceptors.request.use(async (config) => {

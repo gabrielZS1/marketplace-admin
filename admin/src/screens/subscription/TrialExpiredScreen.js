@@ -14,6 +14,7 @@ export default function TrialExpiredScreen({ status }) {
   const insets = useSafeAreaInsets();
   const businessId = status?.id;
   const reason = status?.blockReason || "TRIAL_EXPIRED";
+  const isEmployee = status?.role === "EMPLOYEE";
   const price = formatPrice(status?.monthlyPrice);
   const teamSize = status?.teamSize;
 
@@ -21,15 +22,17 @@ export default function TrialExpiredScreen({ status }) {
   const { subscribe, refreshNow, isLoading, isConfirming, error } =
     useSubscribe(businessId);
 
-  const title =
-    reason === "PAYMENT_FAILED"
-      ? "Assinatura suspensa"
-      : "Seu período de teste acabou";
+  const title = isEmployee
+    ? "Estabelecimento com pendência"
+    : reason === "PAYMENT_FAILED"
+    ? "Assinatura suspensa"
+    : "Seu período de teste acabou";
 
-  const subtitle =
-    reason === "PAYMENT_FAILED"
-      ? "Não conseguimos renovar seu pagamento. Regularize para voltar a usar o app."
-      : "Assine para continuar gerenciando sua agenda e seus clientes.";
+  const subtitle = isEmployee
+    ? "A assinatura do estabelecimento está com uma pendência. Avise o responsável para regularizar."
+    : reason === "PAYMENT_FAILED"
+    ? "Não conseguimos renovar seu pagamento. Regularize para voltar a usar o app."
+    : "Assine para continuar gerenciando sua agenda e seus clientes.";
 
   return (
     <View
@@ -51,7 +54,7 @@ export default function TrialExpiredScreen({ status }) {
           Seus dados continuam salvos.
         </Text>
 
-        {price ? (
+        {price && !isEmployee ? (
           <View className="mt-6 w-full rounded-2xl border border-gray-200 px-5 py-4">
             <Text className="text-[12px] text-gray-400">
               {teamSize === 1 ? "Plano individual" : `Plano · ${teamSize} profissionais`}
@@ -63,25 +66,37 @@ export default function TrialExpiredScreen({ status }) {
           </View>
         ) : null}
 
-        {error ? (
+        {error && !isEmployee ? (
           <Text className="mt-4 text-center text-[13px] text-red-600">{error}</Text>
         ) : null}
       </View>
 
       <View>
-        <Button
-          title={isConfirming ? "Confirmando pagamento…" : "Assinar agora"}
-          onPress={subscribe}
-          loading={isLoading || isConfirming}
-        />
-        <TouchableOpacity
-          onPress={refreshNow}
-          disabled={isLoading}
-          className="mt-2 h-11 items-center justify-center"
-        >
-          <Text className="text-[14px] font-medium text-gray-500">Já paguei · atualizar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={logout} className="h-9 items-center justify-center">
+        {!isEmployee ? (
+          <>
+            <Button
+              title={isConfirming ? "Confirmando pagamento…" : "Assinar agora"}
+              onPress={subscribe}
+              loading={isLoading || isConfirming}
+            />
+            <TouchableOpacity
+              onPress={refreshNow}
+              disabled={isLoading}
+              className="mt-2 h-11 items-center justify-center"
+            >
+              <Text className="text-[14px] font-medium text-gray-500">Já paguei · atualizar</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <TouchableOpacity
+            onPress={refreshNow}
+            disabled={isLoading}
+            className="h-12 items-center justify-center rounded-2xl border border-gray-300"
+          >
+            <Text className="text-[14px] font-semibold text-[#111827]">Atualizar</Text>
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity onPress={logout} className="mt-2 h-9 items-center justify-center">
           <Text className="text-[13px] text-gray-400">Sair da conta</Text>
         </TouchableOpacity>
       </View>

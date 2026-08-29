@@ -2,21 +2,31 @@ import { create } from "zustand";
 import { authApi } from "../api/authApi";
 import { apiClient } from "../api/client";
 import { secureStorage } from "../utils/secureStorage";
+import { signInWithGoogle } from "../services/googleSignIn";
 import { registerForPushNotificationsAsync } from "../../pushNotifications";
 import { getNotificationsEnabled } from "../utils/notificationPref";
 
-async function setupPushNotifications() {
+const ALLOWED_ROLES = ["BUSINESS_OWNER", "EMPLOYEE"];
+
+export async function setupPushNotifications() {
   try {
     if (!(await getNotificationsEnabled())) return;
 
     const token = await registerForPushNotificationsAsync();
-    if (token) {
+    if (!token) return;
+
+    try {
       await apiClient.patch("/businesses/me/push-token", {
         expoPushToken: token,
       });
+    } catch (err) {
+      // Dono recém-cadastrado ainda não tem estabelecimento (onboarding pendente).
+      // Não é erro — o token é registrado de novo quando o negócio existir.
+      if (err?.response?.status === 404) return;
+      console.warn("Não foi possível registrar o token de push:", err?.message);
     }
   } catch (err) {
-    console.error("Erro ao configurar push notifications:", err);
+    console.warn("Push notifications indisponíveis:", err?.message);
   }
 }
 
@@ -31,10 +41,10 @@ export const useAuthStore = create((set, get) => ({
     try {
       const response = await authApi.login({ email, password });
 
-      if (response.role !== "BUSINESS_OWNER") {
+      if (!ALLOWED_ROLES.includes(response.role)) {
         set({
           isLoading: false,
-          error: "Esta conta não é de um empresário. Use o app do cliente.",
+          error: "Esta conta não tem acesso a este app. Use o app do cliente.",
         });
         return { success: false };
       }
@@ -43,8 +53,10 @@ export const useAuthStore = create((set, get) => ({
       set({
         user: {
           name: response.name,
+          email: response.email,
           role: response.role,
           address: response.address,
+          emailVerified: response.emailVerified,
         },
         token: response.token,
         isLoading: false,
@@ -62,7 +74,53 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  async registerBusinessOwner({ name, email, phone, password }) {
+  async loginWithGoogle() {
+    set({ isLoading: true, error: null });
+    try {
+      const google = await signInWithGoogle();
+
+      // Usuário cancelou o popup do Google — não é erro.
+      if (!google) {
+        set({ isLoading: false });
+        return { success: false, cancelled: true };
+      }
+
+      const response = await authApi.loginWithGoogle({ idToken: google.idToken });
+
+      if (!ALLOWED_ROLES.includes(response.role)) {
+        set({
+          isLoading: false,
+          error: "Esta conta não tem acesso a este app. Use o app do cliente.",
+        });
+        return { success: false };
+      }
+
+      await secureStorage.saveToken(response.token);
+      set({
+        user: {
+          name: response.name,
+          email: response.email,
+          role: response.role,
+          address: response.address,
+          emailVerified: response.emailVerified,
+        },
+        token: response.token,
+        isLoading: false,
+      });
+
+      setupPushNotifications();
+
+      return { success: true };
+    } catch (err) {
+      set({
+        isLoading: false,
+        error: err.message || "Não foi possível entrar com o Google.",
+      });
+      return { success: false };
+    }
+  },
+
+  async registerBusinessOwner({ name, email, phone, password, acceptedTerms, captchaToken }) {
     set({ isLoading: true, error: null });
     try {
       const response = await authApi.registerBusinessOwner({
@@ -70,14 +128,18 @@ export const useAuthStore = create((set, get) => ({
         email,
         phone,
         password,
+        acceptedTerms,
+        captchaToken,
       });
 
       await secureStorage.saveToken(response.token);
       set({
         user: {
           name: response.name,
+          email: response.email,
           role: response.role,
           address: response.address,
+          emailVerified: response.emailVerified,
         },
         token: response.token,
         isLoading: false,
@@ -95,7 +157,24 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  async verifyEmail(code) {
+    await authApi.verifyEmail({ code });
+    set((state) => ({
+      user: state.user ? { ...state.user, emailVerified: true } : state.user,
+    }));
+  },
+
+  async resendVerification() {
+    await authApi.resendVerification();
+  },
+
   async logout() {
+    await secureStorage.removeToken();
+    set({ user: null, token: null });
+  },
+
+  async deleteAccount(password) {
+    await authApi.deleteAccount({ password });
     await secureStorage.removeToken();
     set({ user: null, token: null });
   },
@@ -109,14 +188,20 @@ export const useAuthStore = create((set, get) => ({
     try {
       const me = await authApi.getMe();
 
-      if (me.role !== "BUSINESS_OWNER") {
+      if (!ALLOWED_ROLES.includes(me.role)) {
         await secureStorage.removeToken();
         set({ token: null, user: null, isLoading: false });
         return null;
       }
 
       set({
-        user: { name: me.name, role: me.role, address: me.address },
+        user: {
+          name: me.name,
+          email: me.email,
+          role: me.role,
+          address: me.address,
+          emailVerified: me.emailVerified,
+        },
         isLoading: false,
       });
 

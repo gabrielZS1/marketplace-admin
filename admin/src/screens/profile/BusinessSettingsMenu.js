@@ -12,12 +12,15 @@ import {
   Settings,
 } from "lucide-react-native";
 
-const OPTIONS = [
+import { useIsOwner } from "../../hooks/useRole";
+
+const ALL_OPTIONS = [
   {
     key: "customize",
     label: "Personalizar empresa",
     icon: Store,
     dark: true,
+    ownerOnly: true,
   },
   {
     key: "settings",
@@ -30,6 +33,8 @@ const OPTIONS = [
 
 export default function BusinessSettingsMenu({ navigation }) {
   const [open, setOpen] = useState(false);
+  const isOwner = useIsOwner();
+  const OPTIONS = ALL_OPTIONS.filter((o) => isOwner || !o.ownerOnly);
 
   const overlayOpacity =
     useRef(new Animated.Value(0)).current;

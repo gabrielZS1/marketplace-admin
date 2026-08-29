@@ -8,6 +8,10 @@ import ManageHoursScreen from "../screens/settings/ManageHoursScreen";
 import BillingScreen from "../screens/settings/BillingScreen";
 import NotificationSettingsScreen from "../screens/settings/NotificationSettingsScreen";
 import GiftCardsScreen from "../screens/settings/GiftCardsScreen";
+import ChangePasswordScreen from "../screens/settings/ChangePasswordScreen";
+import StatsScreen from "../screens/stats/StatsScreen";
+import IntervalScreen from "../screens/settings/IntervalScreen";
+import DeleteAccountScreen from "../screens/settings/DeleteAccountScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -22,6 +26,10 @@ export default function ProfileStack() {
       <Stack.Screen name="Billing" component={BillingScreen} />
       <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
       <Stack.Screen name="GiftCards" component={GiftCardsScreen} />
+      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+      <Stack.Screen name="Stats" component={StatsScreen} />
+      <Stack.Screen name="Interval" component={IntervalScreen} />
+      <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
     </Stack.Navigator>
   );
 }

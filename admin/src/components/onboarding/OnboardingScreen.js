@@ -30,6 +30,8 @@ export default function OnboardingScreen({
   onBack,
 }) {
   const insets = useSafeAreaInsets();
+  const canGoBack = navigation?.canGoBack?.() ?? false;
+  const showBack = !!onBack || canGoBack;
   const Content = scroll ? ScrollView : View;
   const contentProps = scroll
     ? {
@@ -45,13 +47,17 @@ export default function OnboardingScreen({
       style={{ flex: 1, backgroundColor: "#FFFFFF", paddingTop: insets.top }}
     >
       <View className="px-5 pt-2">
-        <TouchableOpacity
-          onPress={onBack || (() => navigation.goBack())}
-          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
-          className="mb-5 h-9 w-9 items-center justify-center rounded-full bg-gray-100"
-        >
-          <ChevronLeft size={22} color="#111827" strokeWidth={2.2} />
-        </TouchableOpacity>
+        {showBack ? (
+          <TouchableOpacity
+            onPress={onBack || (() => navigation.goBack())}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            className="mb-5 h-9 w-9 items-center justify-center rounded-full bg-gray-100"
+          >
+            <ChevronLeft size={22} color="#111827" strokeWidth={2.2} />
+          </TouchableOpacity>
+        ) : (
+          <View className="mb-5 h-9" />
+        )}
 
         {typeof step === "number" && typeof totalSteps === "number" ? (
           <Stepper step={step} total={totalSteps} />

@@ -1,55 +1,58 @@
 import {
   Search,
   UserRound,
-  ChevronRight,
 } from "lucide-react-native";
 
 import {
   Text,
   TextInput,
-  TouchableOpacity,
   View,
   FlatList,
   Image,
   ActivityIndicator,
 } from "react-native";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useBusinessStore } from "../../store/businessStore";
 import { useContentTopPadding } from "../../hooks/useContentTopPadding";
+import { useIsOwner } from "../../hooks/useRole";
 import { clientApi } from "../../api/clientApi";
+import { mediaUrl } from "../../utils/mediaUrl";
+import ErrorState from "../../components/ui/ErrorState";
 
 export default function ClientsScreen({ navigation }) {
   const businessId = useBusinessStore((state) => state.status?.id);
   const topPad = useContentTopPadding();
+  const isOwner = useIsOwner();
 
   const [clients, setClients] = useState([]);
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [denied, setDenied] = useState(false);
+
+  const loadClients = useCallback(async () => {
+    if (!businessId || !isOwner) {
+      setIsLoading(false);
+      return;
+    }
+    try {
+      setIsLoading(true);
+      setLoadError(false);
+      const result = await clientApi.listByBusiness(businessId);
+      setClients(Array.isArray(result) ? result : []);
+    } catch (error) {
+      console.log("Erro ao carregar clientes:", error);
+      if (error?.response?.status === 403) setDenied(true);
+      else setLoadError(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [businessId, isOwner]);
 
   useEffect(() => {
-    async function loadClients() {
-      if (!businessId) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        setIsLoading(true);
-
-        const result = await clientApi.listByBusiness(businessId);
-
-        setClients(Array.isArray(result) ? result : []);
-      } catch (error) {
-        console.error("Erro ao carregar clientes:", error);
-        setClients([]);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
     loadClients();
-  }, [businessId]);
+  }, [loadClients]);
 
   // BUSCA
   const filteredClients = clients.filter((client) =>
@@ -60,20 +63,12 @@ export default function ClientsScreen({ navigation }) {
 
   function renderClient({ item }) {
     return (
-      <TouchableOpacity
-        activeOpacity={0.7}
-        onPress={() =>
-          navigation.navigate("ClientDetails", {
-            clientId: item.id,
-          })
-        }
-        className="mb-3 flex-row items-center rounded-xl border border-gray-200 p-4"
-      >
+      <View className="mb-3 flex-row items-center rounded-xl border border-gray-200 p-4">
         {/* FOTO */}
         <View className="h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-gray-100">
           {item.photoUrl ? (
             <Image
-              source={{ uri: item.photoUrl }}
+              source={{ uri: mediaUrl(item.photoUrl) }}
               className="h-full w-full"
               resizeMode="cover"
             />
@@ -105,13 +100,20 @@ export default function ClientsScreen({ navigation }) {
             </Text>
           )}
         </View>
+      </View>
+    );
+  }
 
-        <ChevronRight
-          size={22}
-          color="#999"
-          strokeWidth={1.8}
+  if (!isOwner || denied) {
+    return (
+      <View className="flex-1 bg-white px-5" style={{ paddingTop: topPad }}>
+        <Text className="text-[24px] font-bold text-black">Clientes</Text>
+        <ErrorState
+          variant="denied"
+          message="Só o dono do estabelecimento pode ver a lista de clientes"
+          hint="Ela tem os contatos dos clientes. Fale com o responsável se precisar."
         />
-      </TouchableOpacity>
+      </View>
     );
   }
 
@@ -173,6 +175,11 @@ export default function ClientsScreen({ navigation }) {
             Carregando clientes...
           </Text>
         </View>
+      ) : loadError ? (
+        <ErrorState
+          message="Não foi possível carregar os clientes"
+          onRetry={loadClients}
+        />
       ) : (
         <FlatList
           data={filteredClients}

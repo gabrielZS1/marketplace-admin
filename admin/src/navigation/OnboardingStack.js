@@ -11,6 +11,7 @@ import WorkingHoursScreen from "../screens/onboarding/WorkingHoursScreen";
 import ServicesScreen from "../screens/onboarding/ServicesScreen";
 import CompleteScreen from "../screens/onboarding/CompleteScreen";
 import AddressSearchScreen from "../screens/onboarding/AddressSearchScreen";
+import VerifyEmailScreen from "../screens/auth/VerifyEmailScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -28,6 +29,7 @@ export default function OnboardingStack() {
       <Stack.Screen name="Services" component={ServicesScreen} />
       <Stack.Screen name="Complete" component={CompleteScreen} />
       <Stack.Screen name="AddressSearch" component={AddressSearchScreen} />
+      <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
       {/* Próximas telas entram aqui conforme construímos */}
     </Stack.Navigator>
   );

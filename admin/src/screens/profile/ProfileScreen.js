@@ -1,224 +1,306 @@
 import {
   ChevronRight,
-  Settings,
+  ChevronDown,
   Star,
   TrendingUp,
-  DollarSign,
+  Check,
+  Image as ImageIcon,
+  Camera,
+  FileText,
+  Scissors,
+  Users,
+  Clock,
 } from "lucide-react-native";
 import {
+  ActivityIndicator,
+  Image,
   ScrollView,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 
-import { useAuthStore } from "../../store/authStore";
 import { businessApi } from "../../api/businessApi";
+import { serviceApi } from "../../api/serviceApi";
+import { getEmployees } from "../../api/employeeApi";
+import { mediaUrl } from "../../utils/mediaUrl";
 
 import BusinessSettingsMenu from "./BusinessSettingsMenu";
 
+function buildChecklist(details, services, employees) {
+  return [
+    {
+      key: "logo",
+      label: "Adicionar foto de perfil",
+      icon: ImageIcon,
+      done: !!details?.logoUrl,
+      target: "BusinessDetails",
+    },
+    {
+      key: "description",
+      label: "Escrever a descrição da empresa",
+      icon: FileText,
+      done: !!details?.description && details.description.trim().length > 0,
+      target: "BusinessDetails",
+    },
+    {
+      key: "workspace",
+      label: "Fotos do espaço de trabalho",
+      icon: Camera,
+      done: (details?.workspacePhotos?.length ?? 0) > 0,
+      target: "BusinessDetails",
+    },
+    {
+      key: "portfolio",
+      label: "Adicionar trabalhos ao portfólio",
+      icon: Camera,
+      done: (details?.portfolioPhotos?.length ?? 0) > 0,
+      target: "BusinessDetails",
+    },
+    {
+      key: "services",
+      label: "Cadastrar seus serviços",
+      icon: Scissors,
+      done: (services?.length ?? 0) > 0,
+      target: "ManageServices",
+    },
+    {
+      key: "employees",
+      label: "Adicionar um funcionário",
+      icon: Users,
+      done: (employees?.length ?? 0) > 0,
+      target: "Funcionarios",
+    },
+  ];
+}
+
 export default function ProfileScreen({ navigation }) {
-  const logout = useAuthStore((state) => state.logout);
-
-  const [business, setBusiness] = useState(null);
+  const [status, setStatus] = useState(null);
+  const [details, setDetails] = useState(null);
+  const [services, setServices] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [expanded, setExpanded] = useState(false);
 
-  useEffect(() => {
-    loadBusiness();
-  }, []);
-
-  const loadBusiness = async () => {
+  const load = useCallback(async () => {
     try {
-      const data = await businessApi.getMyStatus();
-      setBusiness(data);
-    } catch (error) {
-      console.log("Erro ao carregar empresa:", error);
+      const st = await businessApi.getMyStatus();
+      setStatus(st);
+      if (st?.id) {
+        const [det, svc, emp] = await Promise.all([
+          businessApi.getDetails(st.id).catch(() => null),
+          serviceApi.list(st.id).catch(() => []),
+          getEmployees(st.id).catch(() => []),
+        ]);
+        setDetails(det);
+        setServices(Array.isArray(svc) ? svc : []);
+        setEmployees(Array.isArray(emp) ? emp : []);
+      }
+    } catch (err) {
+      console.log("Erro ao carregar perfil:", err);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const completedSteps = 0;
-  const totalSteps = 5;
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
 
-  const progress =
-    (completedSteps / totalSteps) * 100;
+  const checklist = buildChecklist(details, services, employees);
+  const completedSteps = checklist.filter((c) => c.done).length;
+  const totalSteps = checklist.length;
+  const allDone = completedSteps === totalSteps;
+  const progress = (completedSteps / totalSteps) * 100;
+
+  const rating = details?.rating;
+  const reviewCount = details?.reviewCount ?? 0;
 
   return (
     <View className="flex-1 bg-white">
-
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{
-          paddingBottom: 110,
-        }}
+        contentContainerStyle={{ paddingBottom: 110 }}
       >
-
-        <View className="h-[245px] bg-gray-300">
+        {/* CAPA + FOTO */}
+        <View className="h-[210px] bg-gray-200">
+          {details?.workspacePhotos?.[0] ? (
+            <Image
+              source={{ uri: mediaUrl(details.workspacePhotos[0]) }}
+              className="h-full w-full"
+              resizeMode="cover"
+            />
+          ) : null}
 
           <View className="absolute -bottom-9 left-0 right-0 items-center">
-            <View className="h-[86px] w-[86px] items-center justify-center rounded-full border-[5px] border-white bg-gray-400">
-              <View className="h-[68px] w-[68px] rounded-full bg-gray-300" />
+            <View className="h-[86px] w-[86px] items-center justify-center overflow-hidden rounded-full border-[5px] border-white bg-gray-300">
+              {details?.logoUrl ? (
+                <Image
+                  source={{ uri: mediaUrl(details.logoUrl) }}
+                  className="h-full w-full"
+                  resizeMode="cover"
+                />
+              ) : (
+                <ImageIcon size={26} color="#9CA3AF" />
+              )}
             </View>
 
             <View className="mt-[-3px] flex-row items-center rounded-full border border-gray-200 bg-white px-2.5 py-1 shadow-sm">
               <Star
-                size={10}
-                color="#999"
-                fill="#999"
+                size={11}
+                color={rating ? "#F5B301" : "#B0B0B0"}
+                fill={rating ? "#F5B301" : "#B0B0B0"}
               />
-
-              <Text className="ml-1 text-[9px] font-medium text-gray-500">
-                Ainda não há avaliações
+              <Text className="ml-1 text-[10px] font-medium text-gray-600">
+                {rating
+                  ? `${rating.toFixed(1)} · ${reviewCount} ${
+                      reviewCount === 1 ? "avaliação" : "avaliações"
+                    }`
+                  : "Ainda não há avaliações"}
               </Text>
             </View>
           </View>
         </View>
 
         <View className="px-5">
-
           <View className="mt-14 items-center">
             <Text className="text-[19px] font-bold text-black">
-              {isLoading
-                ? "Carregando..."
-                : business?.name || "Minha empresa"}
+              {isLoading ? "Carregando..." : status?.name || "Minha empresa"}
             </Text>
           </View>
 
+          {/* CARD: COMPLETAR CADASTRO */}
           <View
-            className="mt-5 rounded-2xl border border-gray-200 bg-white px-5 py-4"
+            className="mt-5 rounded-2xl border border-gray-200 bg-white"
             style={{
               shadowColor: "#000",
               shadowOpacity: 0.08,
               shadowRadius: 5,
-              shadowOffset: {
-                width: 0,
-                height: 3,
-              },
+              shadowOffset: { width: 0, height: 3 },
               elevation: 3,
             }}
           >
-            <View className="flex-row items-center justify-between">
-              <Text className="text-[15px] font-semibold text-black">
-                Iniciante
-              </Text>
-
-              <View className="flex-row items-center">
-                <Text className="text-[11px] text-gray-500">
-                  {completedSteps} de {totalSteps} concluído
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setExpanded((v) => !v)}
+              className="flex-row items-center px-5 py-4"
+            >
+              <View className="flex-1">
+                <Text className="text-[15px] font-semibold text-black">
+                  {allDone
+                    ? "Cadastro do estabelecimento completo"
+                    : "Complete o cadastro do seu estabelecimento"}
                 </Text>
-
-                <ChevronRight
-                  size={17}
-                  color="#777"
-                  className="ml-2"
-                />
+                <Text className="mt-0.5 text-[11px] text-gray-500">
+                  {allDone
+                    ? "Tudo certo — seu perfil está completo"
+                    : `${completedSteps} de ${totalSteps} concluído`}
+                </Text>
               </View>
-            </View>
 
-            <View className="mt-4 h-[7px] overflow-hidden rounded-full bg-gray-200">
-              <View
-                className="h-full rounded-full bg-gray-400"
-                style={{
-                  width: `${progress}%`,
-                }}
-              />
-            </View>
+              {allDone ? (
+                <View className="h-6 w-6 items-center justify-center rounded-full bg-green-100">
+                  <Check size={14} color="#16A34A" strokeWidth={3} />
+                </View>
+              ) : expanded ? (
+                <ChevronDown size={18} color="#777" />
+              ) : (
+                <ChevronRight size={18} color="#777" />
+              )}
+            </TouchableOpacity>
+
+            {!allDone ? (
+              <View className="px-5 pb-2">
+                <View className="h-[7px] overflow-hidden rounded-full bg-gray-200">
+                  <View
+                    className="h-full rounded-full bg-black"
+                    style={{ width: `${progress}%` }}
+                  />
+                </View>
+              </View>
+            ) : null}
+
+            {expanded ? (
+              <View className="border-t border-gray-100 px-3 py-1">
+                {checklist.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <TouchableOpacity
+                      key={item.key}
+                      activeOpacity={0.7}
+                      onPress={() => navigation.navigate(item.target)}
+                      className="flex-row items-center px-2 py-3"
+                    >
+                      <View
+                        className={`h-7 w-7 items-center justify-center rounded-full ${
+                          item.done ? "bg-green-100" : "bg-gray-100"
+                        }`}
+                      >
+                        {item.done ? (
+                          <Check size={14} color="#16A34A" strokeWidth={3} />
+                        ) : (
+                          <Icon size={14} color="#6B7280" strokeWidth={2} />
+                        )}
+                      </View>
+                      <Text
+                        className={`ml-3 flex-1 text-[13px] ${
+                          item.done
+                            ? "text-gray-400 line-through"
+                            : "font-medium text-[#111827]"
+                        }`}
+                      >
+                        {item.label}
+                      </Text>
+                      {!item.done ? (
+                        <ChevronRight size={16} color="#9CA3AF" />
+                      ) : null}
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            ) : null}
           </View>
 
+          {/* CARD: ESTATÍSTICAS */}
           <TouchableOpacity
             activeOpacity={0.75}
-            className="mt-4 rounded-2xl border border-gray-200 bg-white px-5 py-5"
+            onPress={() => navigation.navigate("Stats")}
+            className="mt-4 flex-row items-center rounded-2xl border border-gray-200 bg-white px-5 py-5"
             style={{
               shadowColor: "#000",
               shadowOpacity: 0.08,
               shadowRadius: 5,
-              shadowOffset: {
-                width: 0,
-                height: 3,
-              },
+              shadowOffset: { width: 0, height: 3 },
               elevation: 3,
             }}
           >
-            <View className="flex-row items-center">
-
-              <View className="h-11 w-11 items-center justify-center">
-                <TrendingUp
-                  size={29}
-                  color="#000"
-                  strokeWidth={2}
-                />
-              </View>
-
-              <View className="ml-4 flex-1">
-                <Text className="text-[13px] font-semibold text-black">
-                  Estatísticas e Relatórios
-                </Text>
-
-                <Text className="mt-1 text-[10px] leading-4 text-gray-400">
-                  Informações importantes sobre sua
-                  {"\n"}
-                  empresa e seus funcionários
-                </Text>
-              </View>
-
-              <ChevronRight
-                size={21}
-                color="#000"
-              />
+            <View className="h-11 w-11 items-center justify-center">
+              <TrendingUp size={28} color="#000" strokeWidth={2} />
             </View>
-          </TouchableOpacity>
-
-          <Text className="mt-10 text-[15px] font-semibold text-black">
-            Pagamentos
-          </Text>
-
-          <TouchableOpacity
-            activeOpacity={0.75}
-            className="mt-5 rounded-2xl border border-gray-300 bg-white px-5 py-5"
-            style={{
-              shadowColor: "#000",
-              shadowOpacity: 0.12,
-              shadowRadius: 5,
-              shadowOffset: {
-                width: 0,
-                height: 3,
-              },
-              elevation: 3,
-            }}
-          >
-            <View className="flex-row items-center">
-
-              <View className="h-10 w-10 items-center justify-center rounded-full bg-[#F2B900]">
-                <DollarSign
-                  size={23}
-                  color="#fff"
-                  strokeWidth={2.5}
-                />
-              </View>
-
-              <View className="ml-4 flex-1">
-                <Text className="text-[13px] font-semibold text-black">
-                  Veja o resumo das transações
-                </Text>
-
-                <Text className="mt-1 text-[10px] leading-4 text-gray-400">
-                  Revise a lista de vendas recentes para
-                  {"\n"}
-                  certificar que todos os últimos agendamentos
-                  {"\n"}
-                  foram cobrados.
-                </Text>
-              </View>
+            <View className="ml-4 flex-1">
+              <Text className="text-[14px] font-semibold text-black">
+                Estatísticas e relatórios
+              </Text>
+              <Text className="mt-1 text-[11px] leading-4 text-gray-400">
+                Faturamento, agendamentos, serviços e desempenho da equipe
+              </Text>
             </View>
+            <ChevronRight size={20} color="#000" />
           </TouchableOpacity>
-
         </View>
       </ScrollView>
-   
+
+      {isLoading ? (
+        <View className="absolute inset-0 items-center justify-center bg-white/60">
+          <ActivityIndicator size="large" color="#000" />
+        </View>
+      ) : null}
+
       <BusinessSettingsMenu navigation={navigation} />
-  
     </View>
   );
 }

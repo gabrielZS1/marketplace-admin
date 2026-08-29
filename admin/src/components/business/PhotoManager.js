@@ -12,6 +12,7 @@ import { Plus, X } from "lucide-react-native";
 
 import { useImagePicker } from "../../hooks/useImagePicker";
 import { businessApi } from "../../api/businessApi";
+import { mediaUrl } from "../../utils/mediaUrl";
 
 /**
  * Galeria gerenciável de fotos de uma categoria ("PORTFOLIO" | "WORKSPACE").
@@ -86,7 +87,7 @@ export default function PhotoManager({ businessId, category, title, hint }) {
           {photos.map((photo) => (
             <View key={photo.id}>
               <Image
-                source={{ uri: photo.url }}
+                source={{ uri: mediaUrl(photo.url) }}
                 className="h-24 w-24 rounded-2xl bg-gray-100"
                 resizeMode="cover"
               />

@@ -12,6 +12,8 @@ import {
   Plus,
   UserRound,
   MoreVertical,
+  Pencil,
+  UserMinus,
 } from "lucide-react-native";
 
 import {
@@ -21,6 +23,9 @@ import {
 
 import { useBusinessStore } from "../../store/businessStore";
 import { useContentTopPadding } from "../../hooks/useContentTopPadding";
+import { useIsOwner } from "../../hooks/useRole";
+import ErrorState from "../../components/ui/ErrorState";
+import ActionSheet from "../../components/ui/ActionSheet";
 
 export default function EmployeeScreen({ navigation }) {
   const businessStatus = useBusinessStore(
@@ -29,33 +34,29 @@ export default function EmployeeScreen({ navigation }) {
 
   const businessId = businessStatus?.id;
   const topPad = useContentTopPadding();
+  const isOwner = useIsOwner();
 
   const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [denied, setDenied] = useState(false);
+  const [menuFor, setMenuFor] = useState(null);
 
   async function loadEmployees() {
     if (!businessId) {
-      console.log("❌ businessId não encontrado");
       setIsLoading(false);
       return;
     }
 
     try {
       setIsLoading(true);
-
+      setLoadError(false);
       const response = await getEmployees(businessId);
-
       setEmployees(response || []);
     } catch (error) {
-      console.log(
-        "❌ Erro ao carregar funcionários:",
-        error
-      );
-
-      Alert.alert(
-        "Erro",
-        "Não foi possível carregar os funcionários."
-      );
+      console.log("Erro ao carregar funcionários:", error);
+      if (error?.response?.status === 403) setDenied(true);
+      else setLoadError(true);
     } finally {
       setIsLoading(false);
     }
@@ -76,30 +77,18 @@ export default function EmployeeScreen({ navigation }) {
     });
   }
 
-  function handleEmployee(employee) {
+  function confirmDeactivate(employee) {
     Alert.alert(
-      employee.name,
-      "O que deseja fazer?",
+      "Desativar funcionário",
+      `${employee.name} perde o acesso ao app e sai da equipe. Você pode cadastrar de novo depois.`,
       [
-        {
-          text: "Editar",
-          onPress: () => {
-            navigation.navigate("EditEmployee", {
-              businessId,
-              employee,
-            });
-          },
-        },
+        { text: "Cancelar", style: "cancel" },
         {
           text: "Desativar",
           style: "destructive",
           onPress: () => handleDeactivate(employee),
         },
-        {
-          text: "Cancelar",
-          style: "cancel",
-        },
-      ]
+      ],
     );
   }
 
@@ -165,23 +154,33 @@ export default function EmployeeScreen({ navigation }) {
           </Text>
         </View>
 
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={handleAddEmployee}
-          className="h-12 w-12 items-center justify-center rounded-full bg-black"
-        >
-          <Plus
-            size={23}
-            color="#fff"
-            strokeWidth={2.2}
-          />
-        </TouchableOpacity>
+        {isOwner ? (
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={handleAddEmployee}
+            className="h-12 w-12 items-center justify-center rounded-full bg-black"
+          >
+            <Plus size={23} color="#fff" strokeWidth={2.2} />
+          </TouchableOpacity>
+        ) : null}
 
       </View>
     </View>
 
-    {/* SEM BUSINESS ID */}
-    {!businessId ? (
+    {/* ERRO AO CARREGAR */}
+    {denied ? (
+      <ErrorState
+        variant="denied"
+        message="Só o dono do estabelecimento pode ver isso"
+        hint="Fale com o responsável se precisar."
+      />
+    ) : loadError && businessId ? (
+      <ErrorState
+        message="Não foi possível carregar os funcionários"
+        onRetry={loadEmployees}
+        loading={isLoading}
+      />
+    ) : !businessId ? (
 
       <View className="flex-1 items-center justify-center px-8">
 
@@ -222,25 +221,23 @@ export default function EmployeeScreen({ navigation }) {
         </Text>
 
         <Text className="mt-2 max-w-[300px] text-center text-[12px] leading-5 text-gray-400">
-          Cadastre os profissionais que fazem parte
-          da sua equipe para começar a gerenciá-los.
+          {isOwner
+            ? "Cadastre os profissionais que fazem parte da sua equipe para começar a gerenciá-los."
+            : "Nenhum profissional cadastrado neste estabelecimento ainda."}
         </Text>
 
-        <TouchableOpacity
-          activeOpacity={0.8}
-          onPress={handleAddEmployee}
-          className="mt-7 flex-row items-center rounded-xl bg-black px-6 py-4"
-        >
-          <Plus
-            size={18}
-            color="#fff"
-            strokeWidth={2.2}
-          />
-
-          <Text className="ml-2.5 text-[12px] font-bold text-white">
-            Adicionar funcionário
-          </Text>
-        </TouchableOpacity>
+        {isOwner ? (
+          <TouchableOpacity
+            activeOpacity={0.8}
+            onPress={handleAddEmployee}
+            className="mt-7 flex-row items-center rounded-xl bg-black px-6 py-4"
+          >
+            <Plus size={18} color="#fff" strokeWidth={2.2} />
+            <Text className="ml-2.5 text-[12px] font-bold text-white">
+              Adicionar funcionário
+            </Text>
+          </TouchableOpacity>
+        ) : null}
 
       </View>
 
@@ -288,8 +285,8 @@ export default function EmployeeScreen({ navigation }) {
 
           <TouchableOpacity
             key={employee.id}
-            activeOpacity={0.85}
-            onPress={() => handleEmployee(employee)}
+            activeOpacity={isOwner ? 0.85 : 1}
+            onPress={isOwner ? () => setMenuFor(employee) : undefined}
             className="mb-4 flex-row items-center rounded-2xl border border-gray-100 bg-white p-5"
             style={{
               shadowColor: "#000",
@@ -402,6 +399,27 @@ export default function EmployeeScreen({ navigation }) {
 
       </ScrollView>
     )}
+
+    <ActionSheet
+      visible={!!menuFor}
+      onClose={() => setMenuFor(null)}
+      title={menuFor?.name}
+      message="O que deseja fazer?"
+      actions={[
+        {
+          label: "Editar",
+          icon: Pencil,
+          onPress: () =>
+            navigation.navigate("EditEmployee", { businessId, employee: menuFor }),
+        },
+        {
+          label: "Desativar",
+          icon: UserMinus,
+          destructive: true,
+          onPress: () => confirmDeactivate(menuFor),
+        },
+      ]}
+    />
 
   </View>
 )};

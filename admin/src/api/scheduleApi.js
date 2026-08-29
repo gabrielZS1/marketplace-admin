@@ -23,6 +23,23 @@ export const scheduleApi = {
     await apiClient.delete(`/businesses/${businessId}/time-blocks/${id}`);
   },
 
+  // ---- Intervalo recorrente (estabelecimento, todo dia) ----
+  async listIntervals(businessId) {
+    const { data } = await apiClient.get(`/businesses/${businessId}/intervals`);
+    return data;
+  },
+  async createInterval(businessId, { startTime, endTime, label }) {
+    const { data } = await apiClient.post(`/businesses/${businessId}/intervals`, {
+      startTime,
+      endTime,
+      label: label || null,
+    });
+    return data;
+  },
+  async deleteInterval(businessId, id) {
+    await apiClient.delete(`/businesses/${businessId}/intervals/${id}`);
+  },
+
   // ---- Folgas (profissional) ----
   async listTimeOffs(businessId) {
     const { data } = await apiClient.get(`/businesses/${businessId}/time-offs`);

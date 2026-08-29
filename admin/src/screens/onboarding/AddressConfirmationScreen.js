@@ -10,6 +10,7 @@ export default function AddressConfirmationScreen({ navigation, route }) {
   const params = route?.params || {};
 
   const [street, setStreet] = useState(params.address || "");
+  const [number, setNumber] = useState(params.number || "");
   const [complement, setComplement] = useState("");
   const [city, setCity] = useState(params.city || "");
   const [state, setState] = useState(params.state || "");
@@ -25,6 +26,7 @@ export default function AddressConfirmationScreen({ navigation, route }) {
       setIsLoading(true);
       navigation.navigate("LocationConfirmation", {
         address: street.trim(),
+        number: number.trim(),
         complement: complement.trim(),
         city: city.trim(),
         state: state.trim(),
@@ -54,13 +56,24 @@ export default function AddressConfirmationScreen({ navigation, route }) {
         />
       }
     >
-      <Field
-        label="Rua e número"
-        value={street}
-        onChangeText={setStreet}
-        placeholder="Rua, número"
-        clearable
-      />
+      <View className="flex-row" style={{ gap: 12 }}>
+        <View className="flex-1">
+          <Field
+            label="Rua"
+            value={street}
+            onChangeText={setStreet}
+            placeholder="Nome da rua / avenida"
+          />
+        </View>
+        <View className="w-28">
+          <Field
+            label="Número"
+            value={number}
+            onChangeText={(v) => setNumber(v.replace(/[^\dA-Za-z/ -]/g, "").slice(0, 20))}
+            placeholder="Nº ou s/n"
+          />
+        </View>
+      </View>
       <Field
         label="Complemento"
         value={complement}

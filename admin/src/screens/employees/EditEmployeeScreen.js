@@ -17,7 +17,7 @@ import {
   BriefcaseBusiness,
 } from "lucide-react-native";
 
-import { updateEmployee } from "../../api/employeeApi";
+import { updateEmployee, resetEmployeePassword } from "../../api/employeeApi";
 import { getEmployeeWorkingHours } from "../../api/workingHourApi";
 
 export default function EditEmployeeScreen({ navigation, route }) {
@@ -108,6 +108,36 @@ export default function EditEmployeeScreen({ navigation, route }) {
   // =========================================================
   // ATUALIZAR FUNCIONÁRIO
   // =========================================================
+
+  const [resetting, setResetting] = useState(false);
+
+  function handleResetPassword() {
+    if (!businessId || !employee?.id) return;
+    Alert.alert(
+      "Redefinir senha",
+      "Vamos gerar uma senha nova pra este funcionário. A senha atual dele para de funcionar.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Gerar nova senha",
+          onPress: async () => {
+            try {
+              setResetting(true);
+              const { password } = await resetEmployeePassword(businessId, employee.id);
+              Alert.alert(
+                "Senha redefinida",
+                `Nova senha de ${employee.name}:\n\n${password}\n\nRepasse pra ele. Ele pode trocar depois em Configurações.`
+              );
+            } catch (err) {
+              Alert.alert("Erro", err.message || "Não foi possível redefinir a senha.");
+            } finally {
+              setResetting(false);
+            }
+          },
+        },
+      ]
+    );
+  }
 
   async function handleUpdate() {
     if (!businessId || !employee?.id) {
@@ -417,6 +447,22 @@ export default function EditEmployeeScreen({ navigation, route }) {
           ) : (
             <Text className="text-[12px] font-semibold text-white">
               SALVAR ALTERAÇÕES
+            </Text>
+          )}
+        </TouchableOpacity>
+
+        {/* REDEFINIR SENHA */}
+        <TouchableOpacity
+          onPress={handleResetPassword}
+          disabled={resetting}
+          activeOpacity={0.8}
+          className="mt-3 h-[52px] flex-row items-center justify-center rounded-xl border border-gray-300"
+        >
+          {resetting ? (
+            <ActivityIndicator size="small" color="#111827" />
+          ) : (
+            <Text className="text-[12px] font-semibold text-[#111827]">
+              REDEFINIR SENHA DO FUNCIONÁRIO
             </Text>
           )}
         </TouchableOpacity>

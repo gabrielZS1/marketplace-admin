@@ -14,6 +14,7 @@ export default function LocationConfirmationScreen({ navigation, route }) {
   const businessId = useOnboardingStore((state) => state.businessId);
 
   const address = route?.params?.address;
+  const number = route?.params?.number;
   const city = route?.params?.city;
   const state = route?.params?.state || "SP";
   const latitude = route?.params?.latitude;
@@ -28,7 +29,7 @@ export default function LocationConfirmationScreen({ navigation, route }) {
     setError(null);
     setIsLoading(true);
     try {
-      await onboardingApi.address(businessId, { address, city, state, latitude, longitude });
+      await onboardingApi.address(businessId, { address, number, city, state, latitude, longitude });
       navigation.navigate("TeamSize");
     } catch (err) {
       setError(err.message || "Não foi possível salvar. Tente novamente.");
@@ -60,7 +61,7 @@ export default function LocationConfirmationScreen({ navigation, route }) {
         <MapPin size={18} color="#111827" strokeWidth={2} />
         <View className="ml-3 flex-1">
           <Text numberOfLines={1} className="text-[14px] font-semibold text-[#111827]">
-            {address}
+            {[address, number].filter(Boolean).join(", ")}
           </Text>
           <Text className="mt-0.5 text-[12px] text-gray-400">
             {[city, state].filter(Boolean).join(", ")}

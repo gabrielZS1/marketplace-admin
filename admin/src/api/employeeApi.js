@@ -44,3 +44,13 @@ export async function updateEmployee(
 
   return response.data;
 }
+
+// Dono redefine a senha do funcionário. `password` opcional (vazio = gera temporária).
+// Retorna { password }.
+export async function resetEmployeePassword(businessId, employeeId, password) {
+  const response = await apiClient.patch(
+    `/businesses/${businessId}/employees/${employeeId}/password`,
+    password ? { password } : {}
+  );
+  return response.data;
+}

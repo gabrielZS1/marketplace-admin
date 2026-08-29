@@ -12,7 +12,7 @@ import { Eye, EyeOff, Mail } from "lucide-react-native";
 import { useAuthStore } from "../../store/authStore";
 
 const MAX_EMAIL_LENGTH = 100;
-const MAX_PASSWORD_LENGTH = 8;
+const MAX_PASSWORD_LENGTH = 64;
 
 const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 
@@ -23,8 +23,15 @@ export default function LoginScreen({ navigation }) {
   const [validationError, setValidationError] = useState("");
 
   const login = useAuthStore((state) => state.login);
+  const loginWithGoogle = useAuthStore((state) => state.loginWithGoogle);
   const isLoading = useAuthStore((state) => state.isLoading);
   const error = useAuthStore((state) => state.error);
+
+  async function handleGoogle() {
+    if (isLoading) return;
+    setValidationError("");
+    await loginWithGoogle();
+  }
 
   function handleEmailChange(value) {
     // Remove espaços e caracteres de controle
@@ -41,7 +48,7 @@ export default function LoginScreen({ navigation }) {
   }
 
   function handlePasswordChange(value) {
-    // Senha sem espaços e limitada a 8 caracteres
+    // Senha sem espaços
     const sanitized = value
       .replace(/\s/g, "")
       .replace(/[\u0000-\u001F\u007F]/g, "")
@@ -74,11 +81,6 @@ export default function LoginScreen({ navigation }) {
 
     if (!password) {
       setValidationError("Digite sua senha.");
-      return false;
-    }
-
-    if (password.length > MAX_PASSWORD_LENGTH) {
-      setValidationError("A senha deve ter no máximo 8 caracteres.");
       return false;
     }
 
@@ -156,7 +158,7 @@ export default function LoginScreen({ navigation }) {
       {/* Senha */}
       <View className="mb-2 flex-row items-center rounded-xl border border-gray-200 px-4 py-3.5">
         <TextInput
-          className="flex-1"
+          className="flex-1 text-[15px] text-[#111827]"
           placeholder="Senha"
           placeholderTextColor="#9CA3AF"
           secureTextEntry={!showPassword}
@@ -176,17 +178,12 @@ export default function LoginScreen({ navigation }) {
           hitSlop={10}
         >
           {showPassword ? (
-            <EyeOff size={20} color="#9CA3AF" />
-          ) : (
             <Eye size={20} color="#9CA3AF" />
+          ) : (
+            <EyeOff size={20} color="#9CA3AF" />
           )}
         </TouchableOpacity>
       </View>
-
-      {/* Contador da senha */}
-      <Text className="mb-2 text-right text-[10px] text-gray-400">
-        {password.length}/{MAX_PASSWORD_LENGTH}
-      </Text>
 
       {/* Erros */}
       {validationError ? (
@@ -224,7 +221,11 @@ export default function LoginScreen({ navigation }) {
       </TouchableOpacity>
 
       {/* Esqueci senha */}
-      <TouchableOpacity className="mt-4" disabled={isLoading}>
+      <TouchableOpacity
+        className="mt-4"
+        disabled={isLoading}
+        onPress={() => navigation.navigate("ForgotPassword")}
+      >
         <Text className="text-center text-gray-500 underline">
           Esqueceu a senha
         </Text>
@@ -241,16 +242,19 @@ export default function LoginScreen({ navigation }) {
 
       {/* Login social */}
 
-      <Pressable className="h-14 rounded-2xl bg-neutral-100 flex-row items-center justify-center">
+      <Pressable
+        className="h-14 rounded-2xl bg-neutral-100 flex-row items-center justify-center"
+        onPress={handleGoogle}
+        disabled={isLoading}
+      >
         <Image
           source={require("../../../assets/img/google.png")}
-          style={{
-            width: 25,
-            height: 25,
-          
-          }}
+          style={{ width: 25, height: 25 }}
           resizeMode="contain"
         />
+        <Text className="ml-3 font-semibold text-neutral-700">
+          Entrar com Google
+        </Text>
       </Pressable>
     </View>
   );

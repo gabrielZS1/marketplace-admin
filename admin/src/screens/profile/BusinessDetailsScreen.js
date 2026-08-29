@@ -18,6 +18,12 @@ import Field from "../../components/ui/Field";
 import Toggle from "../../components/ui/Toggle";
 import Button from "../../components/ui/Button";
 import PhotoManager from "../../components/business/PhotoManager";
+import { mediaUrl } from "../../utils/mediaUrl";
+import { formatPhone, formatHandle } from "../../utils/phone";
+
+const MAX_NAME = 50;
+const MAX_DESCRIPTION = 500;
+const MAX_HANDLE = 40;
 
 const EMPTY = {
   name: "",
@@ -26,6 +32,7 @@ const EMPTY = {
   instagramUrl: "",
   tiktokUrl: "",
   address: "",
+  number: "",
   city: "",
   state: "",
   workLocationType: "AT_BUSINESS",
@@ -36,12 +43,13 @@ const EMPTY = {
 
 function pickForm(b) {
   return {
-    name: b.name || "",
-    description: b.description || "",
-    phone: b.phone || "",
-    instagramUrl: b.instagramUrl || "",
-    tiktokUrl: b.tiktokUrl || "",
+    name: (b.name || "").slice(0, MAX_NAME),
+    description: (b.description || "").slice(0, MAX_DESCRIPTION),
+    phone: formatPhone(b.phone || ""),
+    instagramUrl: formatHandle(b.instagramUrl || "", MAX_HANDLE),
+    tiktokUrl: formatHandle(b.tiktokUrl || "", MAX_HANDLE),
     address: b.address || "",
+    number: b.number || "",
     city: b.city || "",
     state: b.state || "",
     workLocationType: b.workLocationType || "AT_BUSINESS",
@@ -148,7 +156,7 @@ export default function BusinessDetailsScreen({ navigation }) {
               <ActivityIndicator color="#111827" />
             ) : business?.logoUrl ? (
               <Image
-                source={{ uri: business.logoUrl }}
+                source={{ uri: mediaUrl(business.logoUrl) }}
                 className="h-full w-full"
                 resizeMode="cover"
               />
@@ -189,40 +197,73 @@ export default function BusinessDetailsScreen({ navigation }) {
       <Text className="mb-1 mt-7 text-[12px] font-semibold uppercase tracking-wide text-gray-400">
         Informações
       </Text>
-      <Field label="Nome da empresa" value={form.name} onChangeText={(v) => set("name", v)} />
+      <Field
+        label="Nome da empresa"
+        value={form.name}
+        onChangeText={(v) => set("name", v.slice(0, MAX_NAME))}
+        maxLength={MAX_NAME}
+      />
       <Field
         label="Descrição"
         value={form.description}
-        onChangeText={(v) => set("description", v)}
+        onChangeText={(v) => set("description", v.slice(0, MAX_DESCRIPTION))}
         placeholder="Conte o que torna seu trabalho especial"
+        maxLength={MAX_DESCRIPTION}
         multiline
       />
+      <Text className="mt-1 text-right text-[10px] text-gray-400">
+        {form.description.length}/{MAX_DESCRIPTION}
+      </Text>
       <Field
         label="Telefone"
         value={form.phone}
-        onChangeText={(v) => set("phone", v)}
+        onChangeText={(v) => set("phone", formatPhone(v))}
         keyboardType="phone-pad"
+        maxLength={16}
       />
       <Field
         label="Instagram"
         value={form.instagramUrl}
-        onChangeText={(v) => set("instagramUrl", v)}
+        onChangeText={(v) => set("instagramUrl", formatHandle(v, MAX_HANDLE))}
         autoCapitalize="none"
+        autoCorrect={false}
         placeholder="@seuperfil"
+        maxLength={MAX_HANDLE}
       />
       <Field
         label="TikTok"
         value={form.tiktokUrl}
-        onChangeText={(v) => set("tiktokUrl", v)}
+        onChangeText={(v) => set("tiktokUrl", formatHandle(v, MAX_HANDLE))}
         autoCapitalize="none"
+        autoCorrect={false}
         placeholder="@seuperfil"
+        maxLength={MAX_HANDLE}
       />
 
       {/* LOCALIZAÇÃO */}
       <Text className="mb-1 mt-7 text-[12px] font-semibold uppercase tracking-wide text-gray-400">
         Localização
       </Text>
-      <Field label="Endereço" value={form.address} onChangeText={(v) => set("address", v)} />
+      <View className="flex-row" style={{ gap: 12 }}>
+        <View className="flex-1">
+          <Field
+            label="Endereço"
+            value={form.address}
+            onChangeText={(v) => set("address", v)}
+            placeholder="Rua / avenida"
+          />
+        </View>
+        <View className="w-28">
+          <Field
+            label="Número"
+            value={form.number}
+            onChangeText={(v) =>
+              set("number", v.replace(/[^\dA-Za-z/ -]/g, "").slice(0, 20))
+            }
+            placeholder="Nº ou s/n"
+          />
+        </View>
+      </View>
       <View className="flex-row" style={{ gap: 12 }}>
         <View className="flex-1">
           <Field label="Cidade" value={form.city} onChangeText={(v) => set("city", v)} />

@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { CheckCircle2, PartyPopper } from "lucide-react-native";
+import { CheckCircle2, PartyPopper, MailWarning } from "lucide-react-native";
 import { useOnboardingStore } from "../../store/onboardingStore";
 import { onboardingApi } from "../../api/onboardingApi";
 import { useBusinessStore } from "../../store/businessStore";
-import { useAuthStore } from "../../store/authStore";
+import { useAuthStore, setupPushNotifications } from "../../store/authStore";
 import Button from "../../components/ui/Button";
 
-export default function CompleteScreen() {
+export default function CompleteScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const businessId = useOnboardingStore((state) => state.businessId);
   const promoCode = useOnboardingStore((state) => state.promoCode);
@@ -20,6 +20,7 @@ export default function CompleteScreen() {
 
   const fetchBusinessStatus = useBusinessStore((state) => state.fetchStatus);
   const logout = useAuthStore((state) => state.logout);
+  const emailVerified = useAuthStore((state) => state.user?.emailVerified);
 
   async function handleFinish() {
     if (isLoading) return;
@@ -43,6 +44,8 @@ export default function CompleteScreen() {
     setIsLoading(true);
     try {
       await fetchBusinessStatus();
+      // Agora que o estabelecimento existe, registra o token de push.
+      setupPushNotifications();
       resetOnboarding();
     } finally {
       setIsLoading(false);
@@ -83,6 +86,21 @@ export default function CompleteScreen() {
 
         {error ? (
           <Text className="mt-4 text-center text-[13px] text-red-600">{error}</Text>
+        ) : null}
+
+        {!done && emailVerified === false ? (
+          <TouchableOpacity
+            onPress={() => navigation.navigate("VerifyEmail")}
+            className="mt-5 flex-row items-center rounded-xl border border-[#FDE68A] bg-[#FFFBEB] px-4 py-3"
+          >
+            <MailWarning size={16} color="#B45309" strokeWidth={2} />
+            <Text className="ml-2 flex-1 text-[12px] leading-4 text-[#78350F]">
+              Confirme seu e-mail para não perder o acesso à conta.
+            </Text>
+            <Text className="ml-2 text-[12px] font-semibold text-[#B45309]">
+              Confirmar
+            </Text>
+          </TouchableOpacity>
         ) : null}
       </View>
 

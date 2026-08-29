@@ -13,7 +13,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.gabrielzs1.admin"
     },
     "android": {
       "adaptiveIcon": {
@@ -46,12 +47,16 @@
         {
           "photosPermission": "Permita o acesso às suas fotos para escolher a logo ou fotos do estabelecimento."
         }
-      ]
+      ],
+      "@react-native-google-signin/google-signin"
     ],
     "extra": {
       "eas": {
         "projectId": "3c3e29a3-30ee-4a69-967c-10569a63597d"
-      }
+      },
+      "googleWebClientId": "900868626974-5n8v2hb952jij4udgkn6lh3h3reshe5h.apps.googleusercontent.com",
+      "turnstileSiteKey": "",
+      "turnstileBaseUrl": "https://glowly.app"
     }
   }
 }

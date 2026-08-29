@@ -6,11 +6,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Bell, Settings, ChevronDown } from "lucide-react-native";
+import { Bell, Settings, ChevronDown, UserRound } from "lucide-react-native";
 import * as Notifications from "expo-notifications";
 
 import { useBusinessStore } from "../../store/businessStore";
 import { useContentTopPadding } from "../../hooks/useContentTopPadding";
+import { useIsOwner, useMyEmployeeId } from "../../hooks/useRole";
 import { appointmentApi } from "../../api/appointmentApi";
 import { scheduleApi } from "../../api/scheduleApi";
 
@@ -28,7 +29,6 @@ import {
   minutesToY,
 } from "../../utils/timelineUtils";
 
-import DiagonalPattern from "../../components/DiagonalPattern";
 import CreateAppointmentMenu from "./CreateAppointmentMenu";
 
 
@@ -39,9 +39,33 @@ const SCREEN_WIDTH = Dimensions.get("window").width;
 const SIDEBAR_WIDTH = 44;
 const TIMELINE_WIDTH = SCREEN_WIDTH - SIDEBAR_WIDTH;
 
+// Cores suaves dos cartões de agendamento. Cada serviço fica sempre com a mesma cor.
+const APPT_PALETTE = [
+  { bg: "#FDF3D7", accent: "#E8C15E" },
+  { bg: "#E2F3E5", accent: "#8FC79C" },
+  { bg: "#E0EDFA", accent: "#8FBBE6" },
+  { bg: "#ECE6F6", accent: "#B6A6DE" },
+  { bg: "#FBE6E4", accent: "#E6A29E" },
+  { bg: "#FCEBDD", accent: "#EAB183" },
+];
+
+function apptColor(key) {
+  const s = String(key || "");
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+  return APPT_PALETTE[h % APPT_PALETTE.length];
+}
+
+function shortTime(d) {
+  return `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
 export default function AgendaScreen({ navigation }) {
   const businessId = useBusinessStore((state) => state.status?.id);
   const topPad = useContentTopPadding();
+  const isOwner = useIsOwner();
+  const myEmployeeId = useMyEmployeeId();
+  const [onlyMine, setOnlyMine] = useState(false);
 
   // Estados
   const [updatingId, setUpdatingId] = useState(null);
@@ -137,9 +161,11 @@ export default function AgendaScreen({ navigation }) {
     return () => subscription.remove();
   }, [businessId]);
 
-  // Agendamentos do dia selecionado
-  const dayAppointments = appointments.filter((appointment) =>
-    isSameDay(new Date(appointment.startsAt), selectedDate),
+  // Agendamentos do dia selecionado (funcionário pode filtrar "só os meus")
+  const dayAppointments = appointments.filter(
+    (appointment) =>
+      isSameDay(new Date(appointment.startsAt), selectedDate) &&
+      (!onlyMine || !myEmployeeId || appointment.employeeId === myEmployeeId),
   );
 
   // Bloqueios / folgas que tocam o dia selecionado
@@ -304,8 +330,30 @@ export default function AgendaScreen({ navigation }) {
         })}
       </View>
 
+      {/* ===== FILTRO "SÓ OS MEUS" (funcionário) ===== */}
+      {!isOwner && myEmployeeId ? (
+        <View className="mt-4 flex-row self-center rounded-full bg-gray-100 p-1">
+          <TouchableOpacity
+            onPress={() => setOnlyMine(false)}
+            className={`rounded-full px-4 py-1.5 ${!onlyMine ? "bg-white" : ""}`}
+          >
+            <Text className={`text-[12px] font-semibold ${!onlyMine ? "text-[#111827]" : "text-gray-400"}`}>
+              Agenda completa
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setOnlyMine(true)}
+            className={`rounded-full px-4 py-1.5 ${onlyMine ? "bg-white" : ""}`}
+          >
+            <Text className={`text-[12px] font-semibold ${onlyMine ? "text-[#111827]" : "text-gray-400"}`}>
+              Só os meus
+            </Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
+
       {/* ================= TIMELINE ================= */}
-      <ScrollView className="mt-7 flex-1">
+      <ScrollView className="mt-4 flex-1">
         <View style={{ flexDirection: "row" }}>
           {/* Horários */}
           <View style={{ width: SIDEBAR_WIDTH }}>
@@ -324,11 +372,8 @@ export default function AgendaScreen({ navigation }) {
               width: TIMELINE_WIDTH,
               height: timelineHeight,
             }}
-            className="relative overflow-hidden rounded-lg"
+            className="relative overflow-hidden"
           >
-            {/* Fundo com textura */}
-            <DiagonalPattern width={TIMELINE_WIDTH} height={timelineHeight} />
-
             {/* Linhas dos horários */}
             {hours.map((hour, index) => (
               <View
@@ -338,7 +383,7 @@ export default function AgendaScreen({ navigation }) {
                   top: index * HOUR_HEIGHT,
                   width: TIMELINE_WIDTH,
                 }}
-                className="border-t border-gray-400/30"
+                className="border-t border-gray-100"
               />
             ))}
 
@@ -419,8 +464,13 @@ export default function AgendaScreen({ navigation }) {
               const end = new Date(item.endsAt);
 
               const top = minutesToY(getMinutesFromStart(start));
+              const rawH = minutesToY(getMinutesFromStart(end)) - top;
+              const blockH = Math.max(rawH - 5, 36);
 
-              const height = minutesToY(getMinutesFromStart(end)) - top;
+              const c = apptColor(item.serviceName || item.serviceId);
+              const cancelled = item.status === "CANCELLED";
+              const showTime = true;
+              const showClient = blockH >= 46;
 
               return (
                 <View
@@ -428,26 +478,39 @@ export default function AgendaScreen({ navigation }) {
                   style={{
                     position: "absolute",
                     top,
-                    height: Math.max(height - 4, 38),
+                    height: blockH,
                     left: 8,
                     right: 8,
+                    backgroundColor: c.bg,
+                    borderLeftWidth: 3,
+                    borderLeftColor: c.accent,
+                    opacity: cancelled ? 0.45 : 1,
                   }}
-                  className="overflow-hidden rounded-xl bg-[#f1cf0e]"
+                  className="overflow-hidden rounded-lg"
                 >
-                  <View className="flex-1 justify-center px-3.5">
+                  <View className="flex-1 justify-center px-3 py-1">
                     <Text
                       numberOfLines={1}
-                      className="text-[12px] font-bold text-white"
-                    >
-                      {item.clientName}
-                    </Text>
-
-                    <Text
-                      numberOfLines={1}
-                      className="mt-1 text-[10px] font-medium text-white/80"
+                      className="text-[13px] font-semibold text-[#3F3F46]"
+                      style={cancelled ? { textDecorationLine: "line-through" } : null}
                     >
                       {item.serviceName}
                     </Text>
+
+                    {showTime ? (
+                      <Text numberOfLines={1} className="mt-0.5 text-[11px] text-gray-400">
+                        {shortTime(start)} – {shortTime(end)}
+                      </Text>
+                    ) : null}
+
+                    {showClient && item.clientName ? (
+                      <View className="mt-0.5 flex-row items-center">
+                        <UserRound size={12} color="#9CA3AF" strokeWidth={2} />
+                        <Text numberOfLines={1} className="ml-1 flex-1 text-[11px] text-gray-400">
+                          {item.clientName}
+                        </Text>
+                      </View>
+                    ) : null}
                   </View>
                 </View>
               );
@@ -457,7 +520,7 @@ export default function AgendaScreen({ navigation }) {
       </ScrollView>
 
       {/* ================= MENU CRIAR ================= */}
-      <CreateAppointmentMenu navigation={navigation} />
+      {isOwner ? <CreateAppointmentMenu navigation={navigation} /> : null}
 
       {/* ================= CONFIGURAÇÕES ================= */}
 

@@ -8,13 +8,18 @@ import {
   Pressable,
   Image,
 } from "react-native";
-import { Mail, Eye, EyeOff } from "lucide-react-native";
+import { Mail, Eye, EyeOff, Check } from "lucide-react-native";
 import { useAuthStore } from "../../store/authStore";
+import { openLegal } from "../../constants/legal";
+import TurnstileWidget, {
+  isTurnstileConfigured,
+} from "../../components/TurnstileWidget";
 
 const MAX_NAME_LENGTH = 100;
 const MAX_EMAIL_LENGTH = 100;
 const MAX_PHONE_DIGITS = 11;
-const MAX_PASSWORD_LENGTH = 8;
+const MIN_PASSWORD_LENGTH = 8;
+const MAX_PASSWORD_LENGTH = 64;
 
 const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 
@@ -25,14 +30,25 @@ export default function RegisterScreen({ navigation }) {
   const [password, setPassword] = useState("");
 
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState(null);
   const [validationError, setValidationError] = useState("");
+
+  const captchaOk = !isTurnstileConfigured() || !!captchaToken;
 
   const registerBusinessOwner = useAuthStore(
     (state) => state.registerBusinessOwner,
   );
+  const loginWithGoogle = useAuthStore((state) => state.loginWithGoogle);
 
   const isLoading = useAuthStore((state) => state.isLoading);
   const error = useAuthStore((state) => state.error);
+
+  async function handleGoogle() {
+    if (isLoading) return;
+    setValidationError("");
+    await loginWithGoogle();
+  }
 
   // =========================
   // NOME
@@ -162,13 +178,20 @@ export default function RegisterScreen({ navigation }) {
       return false;
     }
 
-    if (password.length < 4) {
-      setValidationError("A senha deve ter pelo menos 4 caracteres.");
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setValidationError("A senha deve ter pelo menos 8 caracteres.");
       return false;
     }
 
-    if (password.length > MAX_PASSWORD_LENGTH) {
-      setValidationError("A senha deve ter no máximo 8 caracteres.");
+    if (!acceptedTerms) {
+      setValidationError(
+        "Você precisa aceitar os Termos de Uso e a Política de Privacidade.",
+      );
+      return false;
+    }
+
+    if (!captchaOk) {
+      setValidationError("Complete a verificação de segurança.");
       return false;
     }
 
@@ -194,19 +217,26 @@ export default function RegisterScreen({ navigation }) {
     // Enviamos somente os números para o backend
     const cleanPhone = phone.replace(/\D/g, "");
 
-    await registerBusinessOwner({
+    const result = await registerBusinessOwner({
       name: cleanName,
       email: cleanEmail,
       phone: cleanPhone,
       password,
+      acceptedTerms: true,
+      captchaToken,
     });
+
+    // token do Turnstile é de uso único — invalida depois de tentar
+    if (!result?.success) setCaptchaToken(null);
   }
 
   const canRegister =
     name.trim().length >= 3 &&
     email.length > 0 &&
     phone.replace(/\D/g, "").length === 11 &&
-    password.length >= 4 &&
+    password.length >= MIN_PASSWORD_LENGTH &&
+    acceptedTerms &&
+    captchaOk &&
     !isLoading;
 
   return (
@@ -299,9 +329,9 @@ export default function RegisterScreen({ navigation }) {
 
       {/* SENHA */}
 
-      <View className="mb-2 flex-row items-center rounded-xl border border-gray-200 px-4 py-3.5">
+      <View className="mb-1 flex-row items-center rounded-xl border border-gray-200 px-4 py-3.5">
         <TextInput
-          className="flex-1"
+          className="flex-1 text-[15px] text-[#111827]"
           placeholder="Senha"
           placeholderTextColor="#9CA3AF"
           secureTextEntry={!showPassword}
@@ -321,17 +351,26 @@ export default function RegisterScreen({ navigation }) {
           hitSlop={10}
         >
           {showPassword ? (
-            <EyeOff size={20} color="#9CA3AF" />
-          ) : (
             <Eye size={20} color="#9CA3AF" />
+          ) : (
+            <EyeOff size={20} color="#9CA3AF" />
           )}
         </TouchableOpacity>
       </View>
 
       {/* CONTADOR DA SENHA */}
 
-      <Text className="mb-2 text-right text-[10px] text-gray-400">
-        {password.length}/{MAX_PASSWORD_LENGTH}
+      <Text
+        className={`mb-2 text-right text-[10px] ${
+          password.length > 0 && password.length < MIN_PASSWORD_LENGTH
+            ? "text-amber-600"
+            : "text-gray-400"
+        }`}
+      >
+        {password.length} {password.length === 1 ? "caractere" : "caracteres"}
+        {password.length < MIN_PASSWORD_LENGTH
+          ? ` · mínimo ${MIN_PASSWORD_LENGTH}`
+          : ""}
       </Text>
 
       {/* ERRO DE VALIDAÇÃO */}
@@ -345,6 +384,44 @@ export default function RegisterScreen({ navigation }) {
       {!validationError && error ? (
         <Text className="mb-2 text-sm text-red-500">{error}</Text>
       ) : null}
+
+      {/* CAPTCHA */}
+
+      <TurnstileWidget onVerify={setCaptchaToken} />
+
+      {/* CONSENTIMENTO */}
+
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={() => setAcceptedTerms((v) => !v)}
+        disabled={isLoading}
+        className="mt-2 flex-row items-start"
+      >
+        <View
+          className={`mt-0.5 h-5 w-5 items-center justify-center rounded-md border ${
+            acceptedTerms ? "border-black bg-black" : "border-gray-300"
+          }`}
+        >
+          {acceptedTerms ? <Check size={13} color="#fff" strokeWidth={3} /> : null}
+        </View>
+        <Text className="ml-2.5 flex-1 text-[12px] leading-4 text-gray-500">
+          Li e concordo com os{" "}
+          <Text
+            className="font-semibold text-[#111827] underline"
+            onPress={() => openLegal("terms")}
+          >
+            Termos de Uso
+          </Text>{" "}
+          e a{" "}
+          <Text
+            className="font-semibold text-[#111827] underline"
+            onPress={() => openLegal("privacy")}
+          >
+            Política de Privacidade
+          </Text>
+          .
+        </Text>
+      </TouchableOpacity>
 
       {/* BOTÃO */}
 
@@ -385,15 +462,19 @@ export default function RegisterScreen({ navigation }) {
 
       {/* REDES SOCIAIS */}
 
-      <Pressable className="h-14 rounded-2xl bg-neutral-100 flex-row items-center justify-center">
+      <Pressable
+        className="h-14 rounded-2xl bg-neutral-100 flex-row items-center justify-center"
+        onPress={handleGoogle}
+        disabled={isLoading}
+      >
         <Image
           source={require("../../../assets/img/google.png")}
-          style={{
-            width: 25,
-            height: 25,
-          }}
+          style={{ width: 25, height: 25 }}
           resizeMode="contain"
         />
+        <Text className="ml-3 font-semibold text-neutral-700">
+          Inscrever-se com Google
+        </Text>
       </Pressable>
     </View>
   );

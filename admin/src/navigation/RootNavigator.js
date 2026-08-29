@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { NavigationContainer } from "@react-navigation/native";
-import { View, ActivityIndicator } from "react-native";
+import { View, ActivityIndicator, Text, TouchableOpacity } from "react-native";
 import AuthStack from "./AuthStack";
 import OnboardingStack from "./OnboardingStack";
 import AdminTabs from "./AdminTabs";
 import TrialExpiredScreen from "../screens/subscription/TrialExpiredScreen";
 import SubscriptionBanner from "../components/SubscriptionBanner";
+import ErrorBoundary from "../components/ErrorBoundary";
 import { useAuthStore } from "../store/authStore";
 import { useBusinessStore } from "../store/businessStore";
 
@@ -18,10 +19,21 @@ function isBlocked(status) {
   );
 }
 
+function AppShell() {
+  return (
+    <View className="flex-1">
+      <SubscriptionBanner />
+      <AdminTabs />
+    </View>
+  );
+}
+
 export default function RootNavigator() {
   const [isRestoring, setIsRestoring] = useState(true);
 
   const token = useAuthStore((state) => state.token);
+  const role = useAuthStore((state) => state.user?.role);
+  const logout = useAuthStore((state) => state.logout);
   const restoreSession = useAuthStore((state) => state.restoreSession);
 
   const businessStatus = useBusinessStore((state) => state.status);
@@ -47,21 +59,46 @@ export default function RootNavigator() {
   function renderContent() {
     if (!token) return <AuthStack />;
 
+    const isEmployee = role === "EMPLOYEE" || businessStatus?.role === "EMPLOYEE";
+
+    if (isEmployee) {
+      if (!businessStatus) {
+        return (
+          <View className="flex-1 items-center justify-center bg-white px-8">
+            <Text className="text-center text-[15px] font-semibold text-[#111827]">
+              Sua conta não está vinculada a nenhum estabelecimento
+            </Text>
+            <Text className="mt-2 text-center text-[13px] text-gray-500">
+              Peça pro responsável te adicionar de novo.
+            </Text>
+            <TouchableOpacity
+              onPress={logout}
+              className="mt-6 rounded-2xl bg-[#111827] px-6 py-3"
+            >
+              <Text className="text-[14px] font-semibold text-white">Sair</Text>
+            </TouchableOpacity>
+          </View>
+        );
+      }
+      if (isBlocked(businessStatus)) {
+        return <TrialExpiredScreen status={businessStatus} />;
+      }
+      return <AppShell />;
+    }
+
+    // Dono
     if (!businessStatus || !businessStatus.onboardingCompleted) {
       return <OnboardingStack />;
     }
-
     if (isBlocked(businessStatus)) {
       return <TrialExpiredScreen status={businessStatus} />;
     }
-
-    return (
-      <View className="flex-1">
-        <SubscriptionBanner />
-        <AdminTabs />
-      </View>
-    );
+    return <AppShell />;
   }
 
-  return <NavigationContainer>{renderContent()}</NavigationContainer>;
+  return (
+    <NavigationContainer>
+      <ErrorBoundary>{renderContent()}</ErrorBoundary>
+    </NavigationContainer>
+  );
 }

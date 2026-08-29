@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 import {
   Scissors,
   Hand,
@@ -12,6 +12,7 @@ import {
   LayoutGrid,
 } from "lucide-react-native";
 import { useOnboardingStore } from "../../store/onboardingStore";
+import { useAuthStore } from "../../store/authStore";
 import OnboardingScreen from "../../components/onboarding/OnboardingScreen";
 import OptionCard from "../../components/ui/OptionCard";
 import Button from "../../components/ui/Button";
@@ -49,6 +50,18 @@ export default function CategoryScreen({ navigation }) {
   const selectCategory = useOnboardingStore((state) => state.selectCategory);
   const isLoading = useOnboardingStore((state) => state.isLoading);
   const error = useOnboardingStore((state) => state.error);
+  const logout = useAuthStore((state) => state.logout);
+
+  function handleBack() {
+    Alert.alert(
+      "Sair do cadastro",
+      "Você ainda não terminou de cadastrar seu estabelecimento. Deseja sair da conta?",
+      [
+        { text: "Continuar cadastro", style: "cancel" },
+        { text: "Sair", style: "destructive", onPress: () => logout() },
+      ],
+    );
+  }
 
   async function handleContinue() {
     if (!selected) return;
@@ -61,6 +74,7 @@ export default function CategoryScreen({ navigation }) {
   return (
     <OnboardingScreen
       navigation={navigation}
+      onBack={handleBack}
       step={stepIndex("Category")}
       totalSteps={TOTAL_ONBOARDING_STEPS}
       title="Qual é o ramo da sua empresa?"
