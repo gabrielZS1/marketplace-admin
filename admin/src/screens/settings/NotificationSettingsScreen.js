@@ -4,6 +4,7 @@ import { Bell } from "lucide-react-native";
 
 import Screen from "../../components/ui/Screen";
 import Toggle from "../../components/ui/Toggle";
+import Skeleton from "../../components/ui/Skeleton";
 import {
   getNotificationsEnabled,
   setNotificationsEnabled,
@@ -52,7 +53,11 @@ export default function NotificationSettingsScreen({ navigation }) {
             Receber um aviso quando um cliente fizer um novo agendamento.
           </Text>
         </View>
-        {loaded ? <Toggle value={enabled} onValueChange={toggle} /> : null}
+        {loaded ? (
+          <Toggle value={enabled} onValueChange={toggle} />
+        ) : (
+          <Skeleton width={48} height={28} radius={999} />
+        )}
       </View>
 
       <Text className="mt-4 text-[12px] leading-4 text-gray-400">

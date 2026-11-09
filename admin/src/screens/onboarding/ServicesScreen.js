@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Animated,
   Modal,
   Pressable,
@@ -15,6 +14,7 @@ import { serviceApi } from "../../api/serviceApi";
 import OnboardingScreen from "../../components/onboarding/OnboardingScreen";
 import Button from "../../components/ui/Button";
 import { stepIndex, TOTAL_ONBOARDING_STEPS } from "../../theme";
+import { ServiceListSkeleton } from "../../components/skeletons";
 
 const OVERLAY_MAX = 0.5;
 
@@ -128,7 +128,7 @@ export default function ServicesScreen({ navigation }) {
         />
       }
     >
-      {isFetching ? <ActivityIndicator color="#111827" /> : null}
+      {isFetching ? <ServiceListSkeleton count={2} /> : null}
 
       {services.map((service) => (
         <View

@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { ChevronRight } from "lucide-react-native";
 
@@ -10,6 +10,7 @@ import Screen from "../../components/ui/Screen";
 import Button from "../../components/ui/Button";
 import Toggle from "../../components/ui/Toggle";
 import TimeStepper, { timeToMinutes } from "../../components/ui/TimeStepper";
+import { DayRowsSkeleton } from "../../components/skeletons";
 
 const DAYS = [
   "Segunda-feira",
@@ -154,7 +155,7 @@ export default function ManageHoursScreen({ navigation }) {
       footer={<Button title="Salvar" onPress={handleSave} loading={saving} />}
     >
       {loading ? (
-        <ActivityIndicator className="mt-6" color="#111827" />
+        <DayRowsSkeleton />
       ) : (
         DAYS.map((day) => {
           const d = hours[day];

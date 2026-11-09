@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Alert, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Coffee, Trash2, Plus } from "lucide-react-native";
 
 import Screen from "../../components/ui/Screen";
@@ -8,6 +8,7 @@ import TimeStepper, { timeToMinutes } from "../../components/ui/TimeStepper";
 import ErrorState from "../../components/ui/ErrorState";
 import { useBusinessStore } from "../../store/businessStore";
 import { scheduleApi } from "../../api/scheduleApi";
+import { IntervalListSkeleton } from "../../components/skeletons";
 
 // "12:00:00" -> "12:00"
 function hhmm(t) {
@@ -101,9 +102,7 @@ export default function IntervalScreen({ navigation }) {
       </Text>
 
       {loading ? (
-        <View className="items-center py-16">
-          <ActivityIndicator size="large" color="#000" />
-        </View>
+        <IntervalListSkeleton />
       ) : error ? (
         <ErrorState message="Não foi possível carregar os intervalos" onRetry={load} />
       ) : (

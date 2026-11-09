@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Animated,
   Modal,
@@ -18,6 +17,7 @@ import { giftCardApi } from "../../api/giftCardApi";
 import Screen from "../../components/ui/Screen";
 import Button from "../../components/ui/Button";
 import Field from "../../components/ui/Field";
+import { GiftCardListSkeleton } from "../../components/skeletons";
 
 const OVERLAY_MAX = 0.5;
 
@@ -142,7 +142,7 @@ export default function GiftCardsScreen({ navigation }) {
       footer={<Button title="Criar cartão-presente" onPress={openModal} />}
     >
       {loading ? (
-        <ActivityIndicator className="mt-6" color="#111827" />
+        <GiftCardListSkeleton />
       ) : cards.length === 0 ? (
         <View className="mt-10 items-center px-8">
           <View className="h-16 w-16 items-center justify-center rounded-full bg-gray-100">

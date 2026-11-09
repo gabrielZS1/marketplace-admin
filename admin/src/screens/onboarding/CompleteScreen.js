@@ -4,21 +4,18 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { CheckCircle2, PartyPopper, MailWarning } from "lucide-react-native";
 import { useOnboardingStore } from "../../store/onboardingStore";
 import { onboardingApi } from "../../api/onboardingApi";
-import { useBusinessStore } from "../../store/businessStore";
-import { useAuthStore, setupPushNotifications } from "../../store/authStore";
+import { useAuthStore } from "../../store/authStore";
 import Button from "../../components/ui/Button";
 
 export default function CompleteScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const businessId = useOnboardingStore((state) => state.businessId);
   const promoCode = useOnboardingStore((state) => state.promoCode);
-  const resetOnboarding = useOnboardingStore((state) => state.reset);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [done, setDone] = useState(false);
 
-  const fetchBusinessStatus = useBusinessStore((state) => state.fetchStatus);
   const logout = useAuthStore((state) => state.logout);
   const emailVerified = useAuthStore((state) => state.user?.emailVerified);
 
@@ -40,16 +37,8 @@ export default function CompleteScreen({ navigation }) {
     }
   }
 
-  async function handleEnter() {
-    setIsLoading(true);
-    try {
-      await fetchBusinessStatus();
-      // Agora que o estabelecimento existe, registra o token de push.
-      setupPushNotifications();
-      resetOnboarding();
-    } finally {
-      setIsLoading(false);
-    }
+  function handleEnter() {
+    navigation.navigate("Welcome");
   }
 
   return (

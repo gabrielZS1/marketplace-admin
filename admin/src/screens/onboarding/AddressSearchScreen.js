@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Text,
   TextInput,
   TouchableOpacity,
@@ -11,6 +10,7 @@ import { geocodingApi } from "../../api/geocodingApi";
 import { useOnboardingStore } from "../../store/onboardingStore";
 import OnboardingScreen from "../../components/onboarding/OnboardingScreen";
 import Button from "../../components/ui/Button";
+import { AddressResultsSkeleton } from "../../components/skeletons";
 
 export default function AddressSearchScreen({ navigation }) {
   const setSelectedAddress = useOnboardingStore((state) => state.setSelectedAddress);
@@ -70,7 +70,7 @@ export default function AddressSearchScreen({ navigation }) {
 
       <View className="mt-3">
         {isSearching ? (
-          <ActivityIndicator className="mt-6" color="#111827" />
+          <AddressResultsSkeleton />
         ) : null}
 
         {!isSearching &&

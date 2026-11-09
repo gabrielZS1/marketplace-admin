@@ -10,6 +10,7 @@ import TeamSizeScreen from "../screens/onboarding/TeamSizeScreen";
 import WorkingHoursScreen from "../screens/onboarding/WorkingHoursScreen";
 import ServicesScreen from "../screens/onboarding/ServicesScreen";
 import CompleteScreen from "../screens/onboarding/CompleteScreen";
+import WelcomeScreen from "../screens/onboarding/WelcomeScreen";
 import AddressSearchScreen from "../screens/onboarding/AddressSearchScreen";
 import VerifyEmailScreen from "../screens/auth/VerifyEmailScreen";
 
@@ -28,6 +29,7 @@ export default function OnboardingStack() {
       <Stack.Screen name="WorkingHours" component={WorkingHoursScreen} />
       <Stack.Screen name="Services" component={ServicesScreen} />
       <Stack.Screen name="Complete" component={CompleteScreen} />
+      <Stack.Screen name="Welcome" component={WelcomeScreen} />
       <Stack.Screen name="AddressSearch" component={AddressSearchScreen} />
       <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
       {/* Próximas telas entram aqui conforme construímos */}

@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   RefreshControl,
   ScrollView,
   Text,
@@ -23,6 +22,8 @@ import { getEmployees } from "../../api/employeeApi";
 import { apiClient } from "../../api/client";
 import { useBusinessStore } from "../../store/businessStore";
 import { useContentTopPadding } from "../../hooks/useContentTopPadding";
+import Skeleton from "../../components/ui/Skeleton";
+import { UpcomingAppointmentsSkeleton } from "../../components/skeletons";
 
 export default function OverviewScreen({ navigation, route }) {
   const storeBusinessId = useBusinessStore((state) => state.status?.id);
@@ -163,21 +164,6 @@ export default function OverviewScreen({ navigation, route }) {
     return colors[status] || "#999";
   }
 
-  if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator
-          size="small"
-          color="#000"
-        />
-
-        <Text className="mt-3 text-[11px] text-gray-400">
-          Carregando visão geral...
-        </Text>
-      </View>
-    );
-  }
-
   return (
     <View className="flex-1 bg-white">
       <ScrollView
@@ -244,9 +230,13 @@ export default function OverviewScreen({ navigation, route }) {
               </Text>
             </View>
 
-            <Text className="mt-5 text-[27px] font-bold text-white">
-              {todayAppointments.length}
-            </Text>
+            {isLoading ? (
+              <Skeleton tone="dark" width={34} height={28} style={{ marginTop: 22, marginBottom: 4 }} />
+            ) : (
+              <Text className="mt-5 text-[27px] font-bold text-white">
+                {todayAppointments.length}
+              </Text>
+            )}
 
             <Text className="mt-0.5 text-[10px] text-gray-400">
               agendamentos
@@ -269,9 +259,13 @@ export default function OverviewScreen({ navigation, route }) {
               </Text>
             </View>
 
-            <Text className="mt-5 text-[27px] font-bold text-black">
-              {pendingAppointments.length}
-            </Text>
+            {isLoading ? (
+              <Skeleton width={34} height={28} style={{ marginTop: 22, marginBottom: 4 }} />
+            ) : (
+              <Text className="mt-5 text-[27px] font-bold text-black">
+                {pendingAppointments.length}
+              </Text>
+            )}
 
             <Text className="mt-0.5 text-[10px] text-gray-400">
               aguardando confirmação
@@ -294,9 +288,13 @@ export default function OverviewScreen({ navigation, route }) {
               </View>
 
               <View className="ml-3">
-                <Text className="text-[20px] font-bold text-black">
-                  {confirmedToday}
-                </Text>
+                {isLoading ? (
+                  <Skeleton width={22} height={20} style={{ marginVertical: 3 }} />
+                ) : (
+                  <Text className="text-[20px] font-bold text-black">
+                    {confirmedToday}
+                  </Text>
+                )}
 
                 <Text className="text-[9px] text-gray-400">
                   confirmados hoje
@@ -317,9 +315,13 @@ export default function OverviewScreen({ navigation, route }) {
               </View>
 
               <View className="ml-3">
-                <Text className="text-[20px] font-bold text-black">
-                  {employees.length}
-                </Text>
+                {isLoading ? (
+                  <Skeleton width={22} height={20} style={{ marginVertical: 3 }} />
+                ) : (
+                  <Text className="text-[20px] font-bold text-black">
+                    {employees.length}
+                  </Text>
+                )}
 
                 <Text className="text-[9px] text-gray-400">
                   profissionais ativos
@@ -361,7 +363,9 @@ export default function OverviewScreen({ navigation, route }) {
             </TouchableOpacity>
           </View>
 
-          {upcomingAppointments.length === 0 ? (
+          {isLoading ? (
+            <UpcomingAppointmentsSkeleton />
+          ) : upcomingAppointments.length === 0 ? (
             <View className="mt-4 items-center rounded-2xl bg-gray-50 px-6 py-9">
               <Clock3
                 size={25}

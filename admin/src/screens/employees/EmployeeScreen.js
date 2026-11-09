@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   ScrollView,
   Text,
@@ -26,6 +25,7 @@ import { useContentTopPadding } from "../../hooks/useContentTopPadding";
 import { useIsOwner } from "../../hooks/useRole";
 import ErrorState from "../../components/ui/ErrorState";
 import ActionSheet from "../../components/ui/ActionSheet";
+import { EmployeeListSkeleton } from "../../components/skeletons";
 
 export default function EmployeeScreen({ navigation }) {
   const businessStatus = useBusinessStore(
@@ -122,21 +122,6 @@ export default function EmployeeScreen({ navigation }) {
     }
   }
 
-  if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator
-          size="small"
-          color="#000"
-        />
-
-        <Text className="mt-3 text-[11px] text-gray-400">
-          Carregando funcionários...
-        </Text>
-      </View>
-    );
-  }
-
   return (
   <View className="flex-1 bg-white">
 
@@ -174,6 +159,8 @@ export default function EmployeeScreen({ navigation }) {
         message="Só o dono do estabelecimento pode ver isso"
         hint="Fale com o responsável se precisar."
       />
+    ) : isLoading ? (
+      <EmployeeListSkeleton />
     ) : loadError && businessId ? (
       <ErrorState
         message="Não foi possível carregar os funcionários"

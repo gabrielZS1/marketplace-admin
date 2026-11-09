@@ -28,8 +28,9 @@ function AppShell() {
   );
 }
 
-export default function RootNavigator() {
+export default function RootNavigator({ onBootReady }) {
   const [isRestoring, setIsRestoring] = useState(true);
+  const [checkStarted, setCheckStarted] = useState(false);
 
   const token = useAuthStore((state) => state.token);
   const role = useAuthStore((state) => state.user?.role);
@@ -47,6 +48,20 @@ export default function RootNavigator() {
   useEffect(() => {
     if (token) fetchBusinessStatus();
   }, [token]);
+
+  useEffect(() => {
+    if (isCheckingBusiness) setCheckStarted(true);
+  }, [isCheckingBusiness]);
+
+  // Avisa a abertura animada (IntroSplash) quando a primeira tela real
+  // já pode aparecer: sessão restaurada e, se logado, empresa verificada.
+  const bootReady =
+    !isRestoring &&
+    (!token || !!businessStatus || (checkStarted && !isCheckingBusiness));
+
+  useEffect(() => {
+    if (bootReady) onBootReady?.();
+  }, [bootReady]);
 
   if (isRestoring || (token && isCheckingBusiness && !businessStatus)) {
     return (

@@ -19,6 +19,8 @@ import {
   UserRound,
 } from "lucide-react-native";
 
+import { NotificationListSkeleton } from "../../components/skeletons";
+
 const STATUS_CONFIG = {
   PENDING: {
     label: "Aguardando confirmação",
@@ -205,16 +207,7 @@ export default function NotificationsModal({
           {/* CONTEÚDO */}
 
           {isLoading ? (
-            <View className="items-center justify-center py-12">
-              <ActivityIndicator
-                size="small"
-                color="#000"
-              />
-
-              <Text className="mt-3 text-[11px] text-gray-400">
-                Carregando notificações...
-              </Text>
-            </View>
+            <NotificationListSkeleton />
           ) : sortedAppointments.length === 0 ? (
             <View className="items-center justify-center px-8 py-14">
               <View className="h-16 w-16 items-center justify-center rounded-full bg-gray-100">
