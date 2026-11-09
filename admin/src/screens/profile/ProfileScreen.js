@@ -12,9 +12,9 @@ import {
   Clock,
 } from "lucide-react-native";
 import {
-  ActivityIndicator,
   Image,
   ScrollView,
+  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -28,6 +28,7 @@ import { getEmployees } from "../../api/employeeApi";
 import { mediaUrl } from "../../utils/mediaUrl";
 
 import BusinessSettingsMenu from "./BusinessSettingsMenu";
+import Skeleton from "../../components/ui/Skeleton";
 
 function buildChecklist(details, services, employees) {
   return [
@@ -128,7 +129,9 @@ export default function ProfileScreen({ navigation }) {
       >
         {/* CAPA + FOTO */}
         <View className="h-[210px] bg-gray-200">
-          {details?.workspacePhotos?.[0] ? (
+          {isLoading ? (
+            <Skeleton radius={0} style={StyleSheet.absoluteFill} />
+          ) : details?.workspacePhotos?.[0] ? (
             <Image
               source={{ uri: mediaUrl(details.workspacePhotos[0]) }}
               className="h-full w-full"
@@ -138,7 +141,9 @@ export default function ProfileScreen({ navigation }) {
 
           <View className="absolute -bottom-9 left-0 right-0 items-center">
             <View className="h-[86px] w-[86px] items-center justify-center overflow-hidden rounded-full border-[5px] border-white bg-gray-300">
-              {details?.logoUrl ? (
+              {isLoading ? (
+                <Skeleton circle width={76} />
+              ) : details?.logoUrl ? (
                 <Image
                   source={{ uri: mediaUrl(details.logoUrl) }}
                   className="h-full w-full"
@@ -149,6 +154,9 @@ export default function ProfileScreen({ navigation }) {
               )}
             </View>
 
+            {isLoading ? (
+              <Skeleton width={130} height={22} radius={999} style={{ marginTop: -3 }} />
+            ) : (
             <View className="mt-[-3px] flex-row items-center rounded-full border border-gray-200 bg-white px-2.5 py-1 shadow-sm">
               <Star
                 size={11}
@@ -163,14 +171,19 @@ export default function ProfileScreen({ navigation }) {
                   : "Ainda não há avaliações"}
               </Text>
             </View>
+            )}
           </View>
         </View>
 
         <View className="px-5">
           <View className="mt-14 items-center">
-            <Text className="text-[19px] font-bold text-black">
-              {isLoading ? "Carregando..." : status?.name || "Minha empresa"}
-            </Text>
+            {isLoading ? (
+              <Skeleton width={170} height={20} style={{ marginVertical: 3 }} />
+            ) : (
+              <Text className="text-[19px] font-bold text-black">
+                {status?.name || "Minha empresa"}
+              </Text>
+            )}
           </View>
 
           {/* CARD: COMPLETAR CADASTRO */}
@@ -188,7 +201,14 @@ export default function ProfileScreen({ navigation }) {
               activeOpacity={0.7}
               onPress={() => setExpanded((v) => !v)}
               className="flex-row items-center px-5 py-4"
+              disabled={isLoading}
             >
+              {isLoading ? (
+                <View className="flex-1">
+                  <Skeleton width="80%" height={15} style={{ marginVertical: 2 }} />
+                  <Skeleton width="35%" height={11} style={{ marginTop: 6 }} />
+                </View>
+              ) : (
               <View className="flex-1">
                 <Text className="text-[15px] font-semibold text-black">
                   {allDone
@@ -201,8 +221,9 @@ export default function ProfileScreen({ navigation }) {
                     : `${completedSteps} de ${totalSteps} concluído`}
                 </Text>
               </View>
+              )}
 
-              {allDone ? (
+              {isLoading ? null : allDone ? (
                 <View className="h-6 w-6 items-center justify-center rounded-full bg-green-100">
                   <Check size={14} color="#16A34A" strokeWidth={3} />
                 </View>
@@ -213,7 +234,7 @@ export default function ProfileScreen({ navigation }) {
               )}
             </TouchableOpacity>
 
-            {!allDone ? (
+            {!isLoading && !allDone ? (
               <View className="px-5 pb-2">
                 <View className="h-[7px] overflow-hidden rounded-full bg-gray-200">
                   <View
@@ -293,12 +314,6 @@ export default function ProfileScreen({ navigation }) {
           </TouchableOpacity>
         </View>
       </ScrollView>
-
-      {isLoading ? (
-        <View className="absolute inset-0 items-center justify-center bg-white/60">
-          <ActivityIndicator size="large" color="#000" />
-        </View>
-      ) : null}
 
       <BusinessSettingsMenu navigation={navigation} />
     </View>

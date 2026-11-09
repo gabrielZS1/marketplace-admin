@@ -6,8 +6,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Bell, Settings, ChevronDown, UserRound } from "lucide-react-native";
+import { Bell, Settings, ChevronDown, MessageCircle } from "lucide-react-native";
 import * as Notifications from "expo-notifications";
+import { openWhatsApp } from "../../utils/whatsapp";
 
 import { useBusinessStore } from "../../store/businessStore";
 import { useContentTopPadding } from "../../hooks/useContentTopPadding";
@@ -30,6 +31,7 @@ import {
 } from "../../utils/timelineUtils";
 
 import CreateAppointmentMenu from "./CreateAppointmentMenu";
+import { AgendaBlocksSkeleton } from "../../components/skeletons";
 
 
 import NotificationsModal from "./NotificationsModal";
@@ -459,7 +461,8 @@ export default function AgendaScreen({ navigation }) {
             )}
 
             {/* Agendamentos */}
-            {dayAppointments.map((item) => {
+            {isLoading ? <AgendaBlocksSkeleton hourHeight={HOUR_HEIGHT} /> : null}
+            {!isLoading && dayAppointments.map((item) => {
               const start = new Date(item.startsAt);
               const end = new Date(item.endsAt);
 
@@ -469,8 +472,8 @@ export default function AgendaScreen({ navigation }) {
 
               const c = apptColor(item.serviceName || item.serviceId);
               const cancelled = item.status === "CANCELLED";
-              const showTime = true;
-              const showClient = blockH >= 46;
+              const showService = blockH >= 58;
+              const showWhatsApp = blockH >= 40 && !!item.clientPhone && !cancelled;
 
               return (
                 <View
@@ -489,29 +492,40 @@ export default function AgendaScreen({ navigation }) {
                   className="overflow-hidden rounded-lg"
                 >
                   <View className="flex-1 justify-center px-3 py-1">
-                    <Text
-                      numberOfLines={1}
-                      className="text-[13px] font-semibold text-[#3F3F46]"
-                      style={cancelled ? { textDecorationLine: "line-through" } : null}
-                    >
-                      {item.serviceName}
+                    <Text numberOfLines={1} className="text-[11px] text-gray-400">
+                      {shortTime(start)} – {shortTime(end)}
                     </Text>
 
-                    {showTime ? (
+                    <Text
+                      numberOfLines={1}
+                      className="mt-0.5 pr-5 text-[14px] font-semibold text-[#27272A]"
+                      style={cancelled ? { textDecorationLine: "line-through" } : null}
+                    >
+                      {item.clientName || "Cliente"}
+                    </Text>
+
+                    {showService ? (
                       <Text numberOfLines={1} className="mt-0.5 text-[11px] text-gray-400">
-                        {shortTime(start)} – {shortTime(end)}
+                        {item.serviceName}
                       </Text>
                     ) : null}
-
-                    {showClient && item.clientName ? (
-                      <View className="mt-0.5 flex-row items-center">
-                        <UserRound size={12} color="#9CA3AF" strokeWidth={2} />
-                        <Text numberOfLines={1} className="ml-1 flex-1 text-[11px] text-gray-400">
-                          {item.clientName}
-                        </Text>
-                      </View>
-                    ) : null}
                   </View>
+
+                  {showWhatsApp ? (
+                    <TouchableOpacity
+                      onPress={() =>
+                        openWhatsApp(
+                          item.clientPhone,
+                          `Olá, ${item.clientName || ""}! Aqui é do estabelecimento, sobre seu agendamento de ${item.serviceName} às ${shortTime(start)}.`,
+                        )
+                      }
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      style={{ position: "absolute", top: 6, right: 6 }}
+                      className="h-6 w-6 items-center justify-center rounded-full bg-white"
+                    >
+                      <MessageCircle size={14} color="#25D366" strokeWidth={2.2} />
+                    </TouchableOpacity>
+                  ) : null}
                 </View>
               );
             })}

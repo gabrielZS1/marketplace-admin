@@ -9,7 +9,6 @@ import {
   View,
   FlatList,
   Image,
-  ActivityIndicator,
 } from "react-native";
 
 import { useCallback, useEffect, useState } from "react";
@@ -19,6 +18,7 @@ import { useIsOwner } from "../../hooks/useRole";
 import { clientApi } from "../../api/clientApi";
 import { mediaUrl } from "../../utils/mediaUrl";
 import ErrorState from "../../components/ui/ErrorState";
+import { ClientListSkeleton } from "../../components/skeletons";
 
 export default function ClientsScreen({ navigation }) {
   const businessId = useBusinessStore((state) => state.status?.id);
@@ -165,16 +165,7 @@ export default function ClientsScreen({ navigation }) {
 
       {/* CARREGANDO */}
       {isLoading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator
-            size="large"
-            color="#000"
-          />
-
-          <Text className="mt-4 text-[13px] text-gray-400">
-            Carregando clientes...
-          </Text>
-        </View>
+        <ClientListSkeleton />
       ) : loadError ? (
         <ErrorState
           message="Não foi possível carregar os clientes"

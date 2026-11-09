@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { Text, TouchableOpacity, View } from "react-native";
 import {
   DollarSign,
   CalendarCheck,
@@ -13,6 +13,7 @@ import {
 
 import Screen from "../../components/ui/Screen";
 import ErrorState from "../../components/ui/ErrorState";
+import { StatsSkeleton } from "../../components/skeletons";
 import { businessApi } from "../../api/businessApi";
 import { statsApi } from "../../api/statsApi";
 
@@ -160,9 +161,7 @@ export default function StatsScreen({ navigation }) {
       </View>
 
       {isLoading ? (
-        <View className="items-center py-20">
-          <ActivityIndicator size="large" color="#000" />
-        </View>
+        <StatsSkeleton />
       ) : error ? (
         <ErrorState
           message="Não foi possível carregar o relatório"

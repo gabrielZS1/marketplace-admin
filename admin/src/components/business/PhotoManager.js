@@ -13,6 +13,7 @@ import { Plus, X } from "lucide-react-native";
 import { useImagePicker } from "../../hooks/useImagePicker";
 import { businessApi } from "../../api/businessApi";
 import { mediaUrl } from "../../utils/mediaUrl";
+import { PhotoRowSkeleton } from "../skeletons";
 
 /**
  * Galeria gerenciável de fotos de uma categoria ("PORTFOLIO" | "WORKSPACE").
@@ -77,7 +78,7 @@ export default function PhotoManager({ businessId, category, title, hint }) {
       {hint ? <Text className="mt-0.5 text-[12px] text-gray-400">{hint}</Text> : null}
 
       {loading ? (
-        <ActivityIndicator className="mt-3 self-start" color="#111827" />
+        <PhotoRowSkeleton />
       ) : (
         <ScrollView
           horizontal

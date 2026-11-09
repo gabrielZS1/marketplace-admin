@@ -19,6 +19,7 @@ import Toggle from "../../components/ui/Toggle";
 import Button from "../../components/ui/Button";
 import PhotoManager from "../../components/business/PhotoManager";
 import { mediaUrl } from "../../utils/mediaUrl";
+import { BusinessDetailsSkeleton } from "../../components/skeletons";
 import { formatPhone, formatHandle } from "../../utils/phone";
 
 const MAX_NAME = 50;
@@ -125,9 +126,9 @@ export default function BusinessDetailsScreen({ navigation }) {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator color="#111827" />
-      </View>
+      <Screen navigation={navigation} title="Personalizar empresa">
+        <BusinessDetailsSkeleton />
+      </Screen>
     );
   }
 

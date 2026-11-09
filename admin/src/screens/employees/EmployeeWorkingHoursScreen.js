@@ -13,6 +13,7 @@ import {
   getEmployeeWorkingHours,
   updateEmployeeWorkingHours,
 } from "../../api/workingHourApi";
+import { WorkingDaysSkeleton } from "../../components/skeletons";
 
 const DAYS = [
   { id: 1, name: "Segunda-feira", short: "SEG" },
@@ -215,21 +216,6 @@ export default function EmployeeWorkingHoursScreen({
     }
   }
 
-  if (isLoading) {
-    return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator
-          size="small"
-          color="#000"
-        />
-
-        <Text className="mt-3 text-[11px] text-gray-400">
-          Carregando horários...
-        </Text>
-      </View>
-    );
-  }
-
   return (
     <View className="flex-1 bg-white">
 
@@ -305,7 +291,7 @@ export default function EmployeeWorkingHoursScreen({
 
         <View className="mt-8">
 
-          {DAYS.map((day) => {
+          {isLoading ? <WorkingDaysSkeleton /> : DAYS.map((day) => {
 
             const config = days[day.id];
 
@@ -474,10 +460,10 @@ export default function EmployeeWorkingHoursScreen({
 
         <TouchableOpacity
           activeOpacity={0.8}
-          disabled={isSaving}
+          disabled={isSaving || isLoading}
           onPress={handleSave}
           className={`mt-6 h-[52px] items-center justify-center rounded-xl ${
-            isSaving
+            isSaving || isLoading
               ? "bg-gray-300"
               : "bg-black"
           }`}

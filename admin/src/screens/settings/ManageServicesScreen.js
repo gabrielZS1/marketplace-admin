@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Animated,
   Modal,
@@ -17,6 +16,7 @@ import { useBusinessStore } from "../../store/businessStore";
 import { serviceApi } from "../../api/serviceApi";
 import Screen from "../../components/ui/Screen";
 import Button from "../../components/ui/Button";
+import { ServiceListSkeleton } from "../../components/skeletons";
 
 const OVERLAY_MAX = 0.5;
 
@@ -143,7 +143,7 @@ export default function ManageServicesScreen({ navigation }) {
       footer={<Button title="Adicionar serviço" onPress={() => openModal({ mode: "create" })} />}
     >
       {loading ? (
-        <ActivityIndicator className="mt-6" color="#111827" />
+        <ServiceListSkeleton />
       ) : listError ? (
         <Text className="mt-4 text-[13px] text-red-600">{listError}</Text>
       ) : services.length === 0 ? (

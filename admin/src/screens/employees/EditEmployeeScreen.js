@@ -19,6 +19,7 @@ import {
 
 import { updateEmployee, resetEmployeePassword } from "../../api/employeeApi";
 import { getEmployeeWorkingHours } from "../../api/workingHourApi";
+import { HourRowsSkeleton } from "../../components/skeletons";
 
 export default function EditEmployeeScreen({ navigation, route }) {
   const businessId = route?.params?.businessId;
@@ -378,15 +379,8 @@ export default function EditEmployeeScreen({ navigation, route }) {
           </Text>
 
           {loadingHours ? (
-            <View className="mt-5 items-center">
-              <ActivityIndicator
-                size="small"
-                color="#000"
-              />
-
-              <Text className="mt-2 text-[10px] text-gray-400">
-                Carregando horários...
-              </Text>
+            <View className="mt-2">
+              <HourRowsSkeleton />
             </View>
           ) : workingHours.length === 0 ? (
             <View className="mt-4 rounded-xl bg-gray-50 p-4">
