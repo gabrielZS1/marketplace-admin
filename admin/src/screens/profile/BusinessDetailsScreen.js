@@ -20,7 +20,7 @@ import Button from "../../components/ui/Button";
 import PhotoManager from "../../components/business/PhotoManager";
 import { mediaUrl } from "../../utils/mediaUrl";
 import { BusinessDetailsSkeleton } from "../../components/skeletons";
-import { formatPhone, formatHandle } from "../../utils/phone";
+import { formatPhone, formatHandle, isValidPhone } from "../../utils/phone";
 
 const MAX_NAME = 50;
 const MAX_DESCRIPTION = 500;
@@ -30,6 +30,7 @@ const EMPTY = {
   name: "",
   description: "",
   phone: "",
+  whatsappUrl: "",
   instagramUrl: "",
   tiktokUrl: "",
   address: "",
@@ -47,6 +48,7 @@ function pickForm(b) {
     name: (b.name || "").slice(0, MAX_NAME),
     description: (b.description || "").slice(0, MAX_DESCRIPTION),
     phone: formatPhone(b.phone || ""),
+    whatsappUrl: formatPhone(b.whatsappUrl || ""),
     instagramUrl: formatHandle(b.instagramUrl || "", MAX_HANDLE),
     tiktokUrl: formatHandle(b.tiktokUrl || "", MAX_HANDLE),
     address: b.address || "",
@@ -112,6 +114,10 @@ export default function BusinessDetailsScreen({ navigation }) {
 
   async function handleSave() {
     if (saving || !dirty) return;
+    if (form.whatsappUrl && !isValidPhone(form.whatsappUrl)) {
+      Alert.alert("WhatsApp inválido", "Informe o DDD e o número, ex.: (11) 99999-9999.");
+      return;
+    }
     setSaving(true);
     try {
       const updated = await businessApi.updateDetails(businessId, form);
@@ -220,6 +226,14 @@ export default function BusinessDetailsScreen({ navigation }) {
         value={form.phone}
         onChangeText={(v) => set("phone", formatPhone(v))}
         keyboardType="phone-pad"
+        maxLength={16}
+      />
+      <Field
+        label="WhatsApp"
+        value={form.whatsappUrl}
+        onChangeText={(v) => set("whatsappUrl", formatPhone(v))}
+        keyboardType="phone-pad"
+        placeholder="(11) 99999-9999"
         maxLength={16}
       />
       <Field
