@@ -45,6 +45,25 @@ export async function updateEmployee(
   return response.data;
 }
 
+// Foto do funcionário — o próprio funcionário ou o dono. Retorna { photoUrl }.
+export async function uploadEmployeePhoto(businessId, employeeId, imageUri) {
+  const formData = new FormData();
+
+  formData.append("file", {
+    uri: imageUri,
+    name: "photo.jpg",
+    type: "image/jpeg",
+  });
+
+  const response = await apiClient.post(
+    `/businesses/${businessId}/employees/${employeeId}/photo`,
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } }
+  );
+
+  return response.data;
+}
+
 // Dono redefine a senha do funcionário. `password` opcional (vazio = gera temporária).
 // Retorna { password }.
 export async function resetEmployeePassword(businessId, employeeId, password) {

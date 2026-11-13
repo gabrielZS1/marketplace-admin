@@ -6,14 +6,7 @@ import OnboardingScreen from "../../components/onboarding/OnboardingScreen";
 import OptionCard from "../../components/ui/OptionCard";
 import Button from "../../components/ui/Button";
 import { stepIndex, TOTAL_ONBOARDING_STEPS } from "../../theme";
-
-const TEAM_SIZES = [
-  { value: 1, label: "Sou só eu", price: 10 },
-  { value: 2, label: "2 profissionais", price: 20 },
-  { value: 3, label: "3 profissionais", price: 30 },
-  { value: 4, label: "4 profissionais", price: 40 },
-  { value: 5, label: "5 ou mais", price: 50 },
-];
+import { TEAM_SIZES } from "../../constants/plans";
 
 export default function TeamSizeScreen({ navigation }) {
   const [selected, setSelected] = useState(null);

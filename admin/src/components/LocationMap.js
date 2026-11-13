@@ -1,39 +1,18 @@
-import { useState } from "react";
-import { Image, Text, View } from "react-native";
+import { useMemo, useState } from "react";
+import { ActivityIndicator, Text, View } from "react-native";
+import { WebView } from "react-native-webview";
 import { MapPin } from "lucide-react-native";
+import { buildMapHtml } from "./mapHtml";
 
 /**
- * Mapa real, sem dependência nativa: monta os tiles num grid e centraliza
- * exatamente na coordenada, com um pino por cima.
+ * Mapa gratuito e sem chave de API: MapLibre GL + OpenFreeMap dentro de um WebView.
+ * Funciona igual no iOS e no Android (não depende de Apple Maps nem Google Maps).
  *
- * Usa os basemaps públicos do CARTO (sem chave, estilo claro que combina com
- * o app). O tile server do OSM (tile.openstreetmap.org) bloqueia apps com 403,
- * por isso não é usado aqui.
- *
- * Para produção com volume alto, migrar pra `react-native-maps` ou um provedor
- * com chave (MapTiler / Geoapify).
+ * O mapa fica centralizado na coordenada, só para visualização (sem gestos), e o
+ * pino é desenhado por cima, em React Native.
  */
 
-const TILE = 256;
-const ZOOM = 15;
-const SUBDOMAINS = ["a", "b", "c", "d"];
-
-const tileUrl = (z, x, y) => {
-  const s = SUBDOMAINS[Math.abs(x + y) % SUBDOMAINS.length];
-  return `https://${s}.basemaps.cartocdn.com/light_all/${z}/${x}/${y}@2x.png`;
-};
-
-function lonToTileX(lon, z) {
-  return ((lon + 180) / 360) * Math.pow(2, z);
-}
-
-function latToTileY(lat, z) {
-  const rad = (lat * Math.PI) / 180;
-  return (
-    ((1 - Math.log(Math.tan(rad) + 1 / Math.cos(rad)) / Math.PI) / 2) *
-    Math.pow(2, z)
-  );
-}
+const ZOOM = 16;
 
 export default function LocationMap({
   latitude,
@@ -41,7 +20,7 @@ export default function LocationMap({
   height,
   showPin = true,
 }) {
-  const [size, setSize] = useState({ width: 0, height: 0 });
+  const [status, setStatus] = useState("loading"); // loading | ready | error
 
   const hasCoords =
     typeof latitude === "number" &&
@@ -49,41 +28,80 @@ export default function LocationMap({
     !Number.isNaN(latitude) &&
     !Number.isNaN(longitude);
 
+  const html = useMemo(
+    () => (hasCoords ? buildMapHtml(latitude, longitude, ZOOM) : null),
+    [hasCoords, latitude, longitude]
+  );
+
   return (
     <View
-      onLayout={(e) =>
-        setSize({
-          width: e.nativeEvent.layout.width,
-          height: e.nativeEvent.layout.height,
-        })
-      }
       style={height ? { height } : { flex: 1 }}
       className="overflow-hidden rounded-2xl bg-gray-100"
     >
-      {hasCoords && size.width > 0 ? (
-        <MapTiles
-          latitude={latitude}
-          longitude={longitude}
-          width={size.width}
-          height={size.height}
-        />
-      ) : null}
-
-      {showPin && hasCoords ? (
-        <View
-          pointerEvents="none"
-          className="absolute inset-0 items-center justify-center"
-        >
-          <View className="items-center" style={{ marginTop: -18 }}>
-            <MapPin size={38} color="#111827" fill="#111827" strokeWidth={1.5} />
-          </View>
-        </View>
-      ) : null}
-
       {hasCoords ? (
-        <Text className="absolute bottom-1 right-2 text-[9px] text-gray-500">
-          © OpenStreetMap · CARTO
-        </Text>
+        <>
+          {/* key: ao trocar de endereço o mapa é recriado já na nova coordenada */}
+          <WebView
+            key={`${latitude},${longitude}`}
+            source={{ html }}
+            originWhitelist={["about:*", "data:*"]}
+            javaScriptEnabled
+            domStorageEnabled
+            scrollEnabled={false}
+            bounces={false}
+            overScrollMode="never"
+            pointerEvents="none"
+            setSupportMultipleWindows={false}
+            style={{ flex: 1, backgroundColor: "#F3F4F6" }}
+            onLoadStart={() => setStatus("loading")}
+            onMessage={(e) => {
+              const msg = e.nativeEvent.data;
+              if (msg === "loaded") setStatus("ready");
+              else if (msg === "error") setStatus("error");
+            }}
+            onError={() => setStatus("error")}
+            onHttpError={() => setStatus("error")}
+            // Nada de navegar pra fora do mapa (ex.: toque em algum link da página).
+            onShouldStartLoadWithRequest={(req) =>
+              /^(about:|data:)/i.test(req.url)
+            }
+          />
+
+          {status === "loading" ? (
+            <View
+              pointerEvents="none"
+              className="absolute inset-0 items-center justify-center bg-gray-100"
+            >
+              <ActivityIndicator color="#9CA3AF" />
+            </View>
+          ) : null}
+
+          {status === "error" ? (
+            <View className="absolute inset-0 items-center justify-center bg-gray-100 px-6">
+              <MapPin size={26} color="#9ca3af" strokeWidth={1.5} />
+              <Text className="mt-1 text-center text-xs text-gray-400">
+                Não foi possível carregar o mapa. Verifique sua conexão.
+              </Text>
+            </View>
+          ) : null}
+
+          {showPin && status === "ready" ? (
+            <View
+              pointerEvents="none"
+              className="absolute inset-0 items-center justify-center"
+            >
+              <View className="items-center" style={{ marginTop: -18 }}>
+                <MapPin size={38} color="#111827" fill="#111827" strokeWidth={1.5} />
+              </View>
+            </View>
+          ) : null}
+
+          {status === "ready" ? (
+            <Text className="absolute bottom-1 right-2 rounded bg-white/70 px-1 text-[9px] text-gray-600">
+              © OpenFreeMap · OpenMapTiles · OpenStreetMap
+            </Text>
+          ) : null}
+        </>
       ) : (
         <View className="flex-1 items-center justify-center">
           <MapPin size={26} color="#9ca3af" strokeWidth={1.5} />
@@ -92,40 +110,4 @@ export default function LocationMap({
       )}
     </View>
   );
-}
-
-function MapTiles({ latitude, longitude, width, height }) {
-  const maxTile = Math.pow(2, ZOOM) - 1;
-
-  const centerX = lonToTileX(longitude, ZOOM);
-  const centerY = latToTileY(latitude, ZOOM);
-
-  const baseX = Math.floor(centerX);
-  const baseY = Math.floor(centerY);
-
-  // tiles suficientes pra cobrir o container em qualquer tamanho
-  const spanX = Math.ceil(width / TILE / 2) + 1;
-  const spanY = Math.ceil(height / TILE / 2) + 1;
-
-  const tiles = [];
-  for (let i = -spanX; i <= spanX; i++) {
-    for (let j = -spanY; j <= spanY; j++) {
-      const tx = baseX + i;
-      const ty = baseY + j;
-      if (tx < 0 || ty < 0 || tx > maxTile || ty > maxTile) continue;
-
-      const left = width / 2 + (tx - centerX) * TILE;
-      const top = height / 2 + (ty - centerY) * TILE;
-
-      tiles.push(
-        <Image
-          key={`${tx}-${ty}`}
-          source={{ uri: tileUrl(ZOOM, tx, ty) }}
-          style={{ position: "absolute", left, top, width: TILE, height: TILE }}
-        />
-      );
-    }
-  }
-
-  return <View className="absolute inset-0">{tiles}</View>;
 }

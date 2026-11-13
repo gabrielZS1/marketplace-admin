@@ -1,5 +1,15 @@
-import { Alert, Text, TouchableOpacity, View } from "react-native";
+import { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import {
+  Camera,
+  UserRound,
   Building2,
   Scissors,
   Clock,
@@ -17,7 +27,12 @@ import {
 } from "lucide-react-native";
 
 import { useAuthStore } from "../../store/authStore";
-import { useIsOwner } from "../../hooks/useRole";
+import { useBusinessStore } from "../../store/businessStore";
+import { useIsOwner, useMyEmployeeId } from "../../hooks/useRole";
+import { useImagePicker } from "../../hooks/useImagePicker";
+import { authApi } from "../../api/authApi";
+import { uploadEmployeePhoto } from "../../api/employeeApi";
+import { mediaUrl } from "../../utils/mediaUrl";
 import { openLegal } from "../../constants/legal";
 import Screen from "../../components/ui/Screen";
 
@@ -89,6 +104,80 @@ function Row({ item, onPress, last }) {
   );
 }
 
+// Foto do próprio funcionário (aparece pros clientes na equipe do estabelecimento).
+function MyPhoto() {
+  const name = useAuthStore((state) => state.user?.name);
+  const businessId = useBusinessStore((state) => state.status?.id);
+  const employeeId = useMyEmployeeId();
+  const { pickImage } = useImagePicker();
+
+  const [photoUrl, setPhotoUrl] = useState(null);
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    authApi
+      .getMe()
+      .then((me) => alive && setPhotoUrl(me?.photoUrl || null))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  async function handlePick() {
+    if (uploading || !businessId || !employeeId) return;
+    const uri = await pickImage();
+    if (!uri) return;
+    try {
+      setUploading(true);
+      const res = await uploadEmployeePhoto(businessId, employeeId, uri);
+      setPhotoUrl(res?.photoUrl || null);
+    } catch (err) {
+      Alert.alert("Erro", err?.message || "Não foi possível enviar a foto.");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <View className="mb-6 flex-row items-center rounded-2xl border border-gray-100 bg-gray-50 p-4">
+      <TouchableOpacity activeOpacity={0.85} onPress={handlePick} disabled={uploading}>
+        <View className="h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-full bg-gray-200">
+          {uploading ? (
+            <ActivityIndicator color="#111827" />
+          ) : photoUrl ? (
+            <Image
+              source={{ uri: mediaUrl(photoUrl) }}
+              className="h-full w-full"
+              resizeMode="cover"
+            />
+          ) : (
+            <UserRound size={30} color="#9CA3AF" strokeWidth={1.6} />
+          )}
+        </View>
+        <View
+          style={{ elevation: 2 }}
+          className="absolute bottom-0 right-0 h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-[#111827]"
+        >
+          <Camera size={12} color="#fff" strokeWidth={2} />
+        </View>
+      </TouchableOpacity>
+
+      <View className="ml-4 flex-1">
+        <Text className="text-[15px] font-semibold text-[#111827]" numberOfLines={1}>
+          {name || "Minha foto"}
+        </Text>
+        <Text className="mt-1 text-[12px] leading-4 text-gray-500">
+          {photoUrl
+            ? "Toque na foto para trocar. Ela aparece para os clientes na equipe."
+            : "Toque no círculo para colocar sua foto. Ela aparece para os clientes na equipe."}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
 export default function SettingsScreen({ navigation }) {
   const logout = useAuthStore((state) => state.logout);
   const email = useAuthStore((state) => state.user?.email);
@@ -107,6 +196,8 @@ export default function SettingsScreen({ navigation }) {
 
   return (
     <Screen navigation={navigation} title="Configurações">
+      {!isOwner ? <MyPhoto /> : null}
+
       {sections.map((section) => (
         <View key={section.title} className="mb-6">
           <Text className="mb-1 text-[12px] font-semibold uppercase tracking-wide text-gray-400">

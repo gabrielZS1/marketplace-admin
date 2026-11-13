@@ -100,6 +100,16 @@ export default function BillingScreen({ navigation }) {
         </Text>
       </View>
 
+      {st === "TRIAL" || st === "ACTIVE" || st === "PAST_DUE" ? (
+        <View className="mt-3">
+          <Button
+            title="Trocar plano"
+            variant="outline"
+            onPress={() => navigation.navigate("ChangePlan")}
+          />
+        </View>
+      ) : null}
+
       {error ? (
         <Text className="mt-4 text-[13px] text-red-600">{error}</Text>
       ) : null}

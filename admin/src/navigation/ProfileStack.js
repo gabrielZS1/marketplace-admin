@@ -6,6 +6,7 @@ import BusinessDetailsScreen from "../screens/profile/BusinessDetailsScreen";
 import ManageServicesScreen from "../screens/settings/ManageServicesScreen";
 import ManageHoursScreen from "../screens/settings/ManageHoursScreen";
 import BillingScreen from "../screens/settings/BillingScreen";
+import ChangePlanScreen from "../screens/settings/ChangePlanScreen";
 import NotificationSettingsScreen from "../screens/settings/NotificationSettingsScreen";
 import GiftCardsScreen from "../screens/settings/GiftCardsScreen";
 import ChangePasswordScreen from "../screens/settings/ChangePasswordScreen";
@@ -24,6 +25,7 @@ export default function ProfileStack() {
       <Stack.Screen name="ManageServices" component={ManageServicesScreen} />
       <Stack.Screen name="ManageHours" component={ManageHoursScreen} />
       <Stack.Screen name="Billing" component={BillingScreen} />
+      <Stack.Screen name="ChangePlan" component={ChangePlanScreen} />
       <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
       <Stack.Screen name="GiftCards" component={GiftCardsScreen} />
       <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />

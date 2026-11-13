@@ -202,13 +202,19 @@ export default function OverviewScreen({ navigation, route }) {
             </Text>
           </View>
 
-          <View className="h-11 w-11 items-center justify-center rounded-full bg-gray-100">
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate("Agendamento")}
+            accessibilityRole="button"
+            accessibilityLabel="Abrir agendamentos"
+            className="h-11 w-11 items-center justify-center rounded-full bg-gray-100"
+          >
             <CalendarDays
               size={20}
               color="#000"
               strokeWidth={1.8}
             />
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* RESUMO */}

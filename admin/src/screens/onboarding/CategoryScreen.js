@@ -28,7 +28,7 @@ const MAIN_CATEGORIES = [
 ];
 
 const OTHER_CATEGORIES = [
-  { value: "SPA", label: "Dia de SPA", Icon: Flower2 },
+  { value: "SPA", label: "SPA", Icon: Flower2 },
   { value: "MAKEUP", label: "Maquiagem", Icon: Palette },
   { value: "OTHER", label: "Outros", Icon: LayoutGrid },
 ];
