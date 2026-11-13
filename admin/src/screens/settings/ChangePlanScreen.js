@@ -9,6 +9,7 @@ import { TEAM_SIZES, formatPlanPrice } from "../../constants/plans";
 import Screen from "../../components/ui/Screen";
 import OptionCard from "../../components/ui/OptionCard";
 import Button from "../../components/ui/Button";
+import { IN_APP_BILLING } from "../../constants/billing";
 
 export default function ChangePlanScreen({ navigation }) {
   const status = useBusinessStore((s) => s.status);
@@ -38,17 +39,17 @@ export default function ChangePlanScreen({ navigation }) {
 
   const isTrial = subscriptionStatus === "TRIAL";
   const effectNote = isTrial
-    ? "Você está no período de teste. O novo valor passa a valer quando você assinar."
-    : "O novo valor vale a partir da próxima cobrança. O limite de profissionais muda agora.";
+    ? "Você está no período de teste. A mudança passa a valer para a assinatura quando você assinar."
+    : "O limite de profissionais muda agora; a assinatura acompanha a mudança a partir do próximo ciclo.";
 
   function confirm() {
     if (!chosen || saving) return;
 
     Alert.alert(
       isUpgrade ? "Aumentar plano" : "Reduzir plano",
-      `Mudar de "${current?.label}" para "${chosen.label}"?\n\nNovo valor: ${formatPlanPrice(
-        chosen.price
-      )} por mês.\n\n${effectNote}`,
+      `Mudar de "${current?.label}" para "${chosen.label}"?\n\n${
+        IN_APP_BILLING ? `Novo valor: ${formatPlanPrice(chosen.price)} por mês.\n\n` : ""
+      }${effectNote}`,
       [
         { text: "Cancelar", style: "cancel" },
         { text: "Confirmar", onPress: submit },
@@ -76,7 +77,11 @@ export default function ChangePlanScreen({ navigation }) {
     <Screen
       navigation={navigation}
       title="Trocar plano"
-      subtitle="A mensalidade depende do número de profissionais da sua equipe."
+      subtitle={
+        IN_APP_BILLING
+          ? "A mensalidade depende do número de profissionais da sua equipe."
+          : "Escolha quantos profissionais atendem no seu estabelecimento."
+      }
       footer={
         <Button
           title={chosen ? `Mudar para ${chosen.label}` : "Escolha um plano"}
@@ -91,8 +96,8 @@ export default function ChangePlanScreen({ navigation }) {
         const tooSmall = item.value < activeCount;
         const disabled = isCurrent || tooSmall;
 
-        let description = `${formatPlanPrice(item.price)} por mês`;
-        if (isCurrent) description = `Seu plano atual · ${description}`;
+        let description = IN_APP_BILLING ? `${formatPlanPrice(item.price)} por mês` : "";
+        if (isCurrent) description = description ? `Seu plano atual · ${description}` : "Seu plano atual";
         else if (tooSmall) {
           description = `Você tem ${activeCount} profissionais ativos — desative alguns antes de escolher este plano.`;
         }

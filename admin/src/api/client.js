@@ -16,9 +16,6 @@ export const apiClient = axios.create({
 apiClient.interceptors.request.use(async (config) => {
   const token = await secureStorage.getToken();
 
-  console.log("TOKEN ENCONTRADO:", token ? "SIM" : "NÃO");
-  console.log("REQUISIÇÃO:", config.method?.toUpperCase(), config.url);
-
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

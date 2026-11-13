@@ -7,6 +7,7 @@ import OptionCard from "../../components/ui/OptionCard";
 import Button from "../../components/ui/Button";
 import { stepIndex, TOTAL_ONBOARDING_STEPS } from "../../theme";
 import { TEAM_SIZES } from "../../constants/plans";
+import { IN_APP_BILLING } from "../../constants/billing";
 
 export default function TeamSizeScreen({ navigation }) {
   const [selected, setSelected] = useState(null);
@@ -40,7 +41,11 @@ export default function TeamSizeScreen({ navigation }) {
       step={stepIndex("TeamSize")}
       totalSteps={TOTAL_ONBOARDING_STEPS}
       title="Qual o tamanho da sua equipe?"
-      subtitle="A mensalidade depende do número de profissionais."
+      subtitle={
+        IN_APP_BILLING
+          ? "A mensalidade depende do número de profissionais."
+          : "Escolha quantos profissionais atendem no seu estabelecimento."
+      }
       footer={
         <Button
           title="Continuar"
@@ -69,9 +74,11 @@ export default function TeamSizeScreen({ navigation }) {
 
       <View className="mt-2 rounded-2xl bg-[#F5F6F8] px-4 py-3">
         <Text className="text-[12px] leading-4 text-gray-500">
-          {chosen
-            ? `Após o período de teste: R$ ${chosen.price},00 por mês. Você só paga quando o teste acabar.`
-            : "Você tem um período de teste gratuito antes de qualquer cobrança."}
+          {IN_APP_BILLING
+            ? chosen
+              ? `Após o período de teste: R$ ${chosen.price},00 por mês. Você só paga quando o teste acabar.`
+              : "Você tem um período de teste gratuito antes de qualquer cobrança."
+            : "Você começa com um período de teste gratuito. Dá para mudar o plano depois."}
         </Text>
       </View>
 

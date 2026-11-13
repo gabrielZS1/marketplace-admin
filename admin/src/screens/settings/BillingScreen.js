@@ -8,6 +8,7 @@ import { useBusinessStore } from "../../store/businessStore";
 import { useSubscribe } from "../../hooks/useSubscribe";
 import Screen from "../../components/ui/Screen";
 import Button from "../../components/ui/Button";
+import { IN_APP_BILLING } from "../../constants/billing";
 
 function money(v) {
   if (v == null) return null;
@@ -70,7 +71,7 @@ export default function BillingScreen({ navigation }) {
     line: "—",
   };
 
-  const showSubscribe = st === "TRIAL" || st === "PAST_DUE";
+  const showSubscribe = IN_APP_BILLING && (st === "TRIAL" || st === "PAST_DUE");
   const busy = isLoading || isConfirming;
 
   return (
@@ -91,13 +92,21 @@ export default function BillingScreen({ navigation }) {
         <Text className="text-[12px] text-gray-400">
           {teamSize === 1 ? "Plano individual" : `Plano · ${teamSize || "?"} profissionais`}
         </Text>
-        <Text className="mt-1 text-2xl font-bold text-[#111827]">
-          {price || "—"}
-          <Text className="text-[13px] font-normal text-gray-400"> / mês</Text>
-        </Text>
-        <Text className="mt-2 text-[12px] leading-4 text-gray-400">
-          O valor acompanha a quantidade de profissionais da sua equipe.
-        </Text>
+        {IN_APP_BILLING ? (
+          <>
+            <Text className="mt-1 text-2xl font-bold text-[#111827]">
+              {price || "—"}
+              <Text className="text-[13px] font-normal text-gray-400"> / mês</Text>
+            </Text>
+            <Text className="mt-2 text-[12px] leading-4 text-gray-400">
+              O valor acompanha a quantidade de profissionais da sua equipe.
+            </Text>
+          </>
+        ) : (
+          <Text className="mt-1 text-[15px] font-semibold text-[#111827]">
+            {teamSize === 1 ? "1 profissional" : `Até ${teamSize || "?"} profissionais`}
+          </Text>
+        )}
       </View>
 
       {st === "TRIAL" || st === "ACTIVE" || st === "PAST_DUE" ? (
@@ -114,10 +123,12 @@ export default function BillingScreen({ navigation }) {
         <Text className="mt-4 text-[13px] text-red-600">{error}</Text>
       ) : null}
 
-      <Text className="mt-5 text-[12px] leading-4 text-gray-400">
-        O pagamento é processado pelo Mercado Pago. Nenhum dado de cartão passa pelo app.
-        Cancelamentos e recibos ficam na sua conta do Mercado Pago.
-      </Text>
+      {IN_APP_BILLING ? (
+        <Text className="mt-5 text-[12px] leading-4 text-gray-400">
+          O pagamento é processado pelo Mercado Pago. Nenhum dado de cartão passa pelo app.
+          Cancelamentos e recibos ficam na sua conta do Mercado Pago.
+        </Text>
+      ) : null}
 
       {showSubscribe ? (
         <View className="mt-5">
