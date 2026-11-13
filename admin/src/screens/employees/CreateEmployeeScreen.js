@@ -82,9 +82,11 @@ export default function CreateEmployeeScreen({ navigation, route }) {
 
   const [isLoading, setIsLoading] = useState(false);
 
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
+
   const canSubmit =
     name.trim().length >= 3 &&
-    email.trim().length > 0 &&
+    emailValid &&
     phone.trim().length > 0 &&
     specialty.trim().length > 0;
 
@@ -232,7 +234,9 @@ export default function CreateEmployeeScreen({ navigation, route }) {
     if (!canSubmit) {
       Alert.alert(
         "Campos obrigatórios",
-        "Preencha nome, e-mail, telefone e especialidade."
+        emailValid || email.trim().length === 0
+          ? "Preencha nome, e-mail, telefone e especialidade."
+          : "Informe um e-mail válido. É com ele que o funcionário vai entrar no app."
       );
 
       return;
@@ -266,7 +270,7 @@ export default function CreateEmployeeScreen({ navigation, route }) {
 
       Alert.alert(
         "Funcionário cadastrado",
-        `O funcionário ${employee.name} foi cadastrado com sucesso.\n\nSenha temporária: ${employee.temporaryPassword}`,
+        `${employee.name} foi cadastrado(a).\n\nE-mail de acesso: ${employee.email}\nSenha temporária: ${employee.temporaryPassword}\n\nPasse esses dados para o funcionário: é com esse e-mail que ele vai entrar no app.`,
         [
           {
             text: "OK",
@@ -388,6 +392,19 @@ export default function CreateEmployeeScreen({ navigation, route }) {
             autoCorrect={false}
             className="h-[52px] rounded-xl border border-gray-200 px-4 text-[13px] text-black"
           />
+
+          <View className="mt-2 flex-row rounded-xl bg-amber-50 px-3 py-2.5">
+            <Text className="flex-1 text-[10px] leading-4 text-amber-800">
+              Use um e-mail válido e que o funcionário acesse. É com ele que o
+              profissional vai entrar no app depois.
+            </Text>
+          </View>
+
+          {email.trim().length > 0 && !emailValid ? (
+            <Text className="mt-1.5 text-[10px] text-red-600">
+              Esse e-mail não parece válido.
+            </Text>
+          ) : null}
         </View>
 
         {/* TELEFONE */}
@@ -571,8 +588,10 @@ export default function CreateEmployeeScreen({ navigation, route }) {
           <Text className="text-[10px] leading-4 text-gray-500">
             Uma senha temporária será gerada
             automaticamente para o funcionário.
-            Após o cadastro, você poderá repassar
-            os dados de acesso para ele.
+            Após o cadastro, repasse o e-mail e a
+            senha para ele entrar no app. Depois
+            do primeiro acesso, o próprio
+            funcionário pode colocar a sua foto.
           </Text>
         </View>
 

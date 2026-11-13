@@ -63,7 +63,7 @@ export default function BasicInfoScreen({ navigation }) {
 
   const isValid =
     businessName.trim().length >= 2 &&
-    fullName.trim().length >= 3 &&
+    fullName.trim().split(/\s+/).filter((p) => p.length >= 2).length >= 2 &&
     phone.replace(/\D/g, "").length >= 10;
 
   async function handleContinue() {
@@ -110,10 +110,12 @@ export default function BasicInfoScreen({ navigation }) {
       />
 
       <Field
-        label="Seu nome completo"
+        label="Nome e sobrenome"
         value={fullName}
-        onChangeText={setFullName}
-        placeholder="Nome e sobrenome"
+        onChangeText={(v) => setFullName(v.replace(/[\d_@#$%^&*()+=[\]{}<>\\|/!?,.:;"~`]/g, "").slice(0, 60))}
+        placeholder="Ex.: Maria Silva"
+        autoCapitalize="words"
+        autoCorrect={false}
       />
 
       <View className="mt-4">

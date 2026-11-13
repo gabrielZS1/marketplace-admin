@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   Alert,
+  Image,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -13,12 +14,16 @@ import {
   MoreVertical,
   Pencil,
   UserMinus,
+  Camera,
 } from "lucide-react-native";
 
 import {
   getEmployees,
   deleteEmployee,
+  uploadEmployeePhoto,
 } from "../../api/employeeApi";
+import { useImagePicker } from "../../hooks/useImagePicker";
+import { mediaUrl } from "../../utils/mediaUrl";
 
 import { useBusinessStore } from "../../store/businessStore";
 import { useContentTopPadding } from "../../hooks/useContentTopPadding";
@@ -35,6 +40,7 @@ export default function EmployeeScreen({ navigation }) {
   const businessId = businessStatus?.id;
   const topPad = useContentTopPadding();
   const isOwner = useIsOwner();
+  const { pickImage } = useImagePicker();
 
   const [employees, setEmployees] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,6 +81,23 @@ export default function EmployeeScreen({ navigation }) {
     navigation.navigate("CreateEmployee", {
       businessId,
     });
+  }
+
+  async function handleChangePhoto(employee) {
+    if (!employee) return;
+    const uri = await pickImage();
+    if (!uri) return;
+
+    try {
+      const res = await uploadEmployeePhoto(businessId, employee.id, uri);
+      setEmployees((current) =>
+        current.map((item) =>
+          item.id === employee.id ? { ...item, photoUrl: res?.photoUrl } : item
+        )
+      );
+    } catch (error) {
+      Alert.alert("Erro", error?.message || "Não foi possível enviar a foto.");
+    }
   }
 
   function confirmDeactivate(employee) {
@@ -288,9 +311,15 @@ export default function EmployeeScreen({ navigation }) {
           >
 
             {/* AVATAR */}
-            <View className="h-[58px] w-[58px] items-center justify-center rounded-full bg-gray-100">
+            <View className="h-[58px] w-[58px] items-center justify-center overflow-hidden rounded-full bg-gray-100">
 
-              {employee.name ? (
+              {employee.photoUrl ? (
+                <Image
+                  source={{ uri: mediaUrl(employee.photoUrl) }}
+                  className="h-full w-full"
+                  resizeMode="cover"
+                />
+              ) : employee.name ? (
                 <Text className="text-[20px] font-bold text-gray-500">
                   {employee.name
                     .trim()
@@ -398,6 +427,11 @@ export default function EmployeeScreen({ navigation }) {
           icon: Pencil,
           onPress: () =>
             navigation.navigate("EditEmployee", { businessId, employee: menuFor }),
+        },
+        {
+          label: "Alterar foto",
+          icon: Camera,
+          onPress: () => handleChangePhoto(menuFor),
         },
         {
           label: "Desativar",
