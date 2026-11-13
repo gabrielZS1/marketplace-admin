@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "admin",
+    "name": "Glowly Business",
     "slug": "admin",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -12,8 +12,11 @@
       "backgroundColor": "#111111"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.gabrielzs1.admin"
+      "supportsTablet": false,
+      "bundleIdentifier": "app.glowly.negocios",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +24,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.gabrielzs1.admin",
+      "package": "app.glowly.negocios",
       "googleServicesFile": "./google-services.json"
     },
     "web": {

@@ -4,6 +4,7 @@ import { Clock, AlertTriangle } from "lucide-react-native";
 import dayjs from "dayjs";
 import { useBusinessStore } from "../store/businessStore";
 import { useSubscribe } from "../hooks/useSubscribe";
+import { IN_APP_BILLING } from "../constants/billing";
 
 function daysLeft(dateStr) {
   if (!dateStr) return null;
@@ -63,20 +64,22 @@ export default function SubscriptionBanner() {
         {label}
       </Text>
 
-      <TouchableOpacity
-        onPress={subscribe}
-        disabled={busy}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        className="ml-3"
-      >
-        {busy ? (
-          <ActivityIndicator size="small" color={theme.accent} />
-        ) : (
-          <Text style={{ color: theme.accent }} className="text-[13px] font-semibold">
-            {isTrial ? "Assinar" : "Regularizar"}
-          </Text>
-        )}
-      </TouchableOpacity>
+      {IN_APP_BILLING ? (
+        <TouchableOpacity
+          onPress={subscribe}
+          disabled={busy}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          className="ml-3"
+        >
+          {busy ? (
+            <ActivityIndicator size="small" color={theme.accent} />
+          ) : (
+            <Text style={{ color: theme.accent }} className="text-[13px] font-semibold">
+              {isTrial ? "Assinar" : "Regularizar"}
+            </Text>
+          )}
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 }

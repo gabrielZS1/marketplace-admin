@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Pressable,
   Image,
+  Platform,
 } from "react-native";
 import { Eye, EyeOff, Mail } from "lucide-react-native";
 import { useAuthStore } from "../../store/authStore";
@@ -231,6 +232,9 @@ export default function LoginScreen({ navigation }) {
         </Text>
       </TouchableOpacity>
 
+      {/* Google fica só no Android: a Apple exige "Entrar com Apple" junto de qualquer login social. */}
+      {Platform.OS !== "ios" && (
+      <>
       {/* Separador */}
       <View className="my-8 flex-row items-center">
         <View className="h-px flex-1 bg-gray-200" />
@@ -256,6 +260,8 @@ export default function LoginScreen({ navigation }) {
           Entrar com Google
         </Text>
       </Pressable>
+      </>
+      )}
     </View>
   );
 }

@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Pressable,
   Image,
+  Platform,
 } from "react-native";
 import { Mail, Eye, EyeOff, Check } from "lucide-react-native";
 import { useAuthStore } from "../../store/authStore";
@@ -450,6 +451,9 @@ export default function RegisterScreen({ navigation }) {
         )}
       </TouchableOpacity>
 
+      {/* Google fica só no Android: a Apple exige "Entrar com Apple" junto de qualquer login social. */}
+      {Platform.OS !== "ios" && (
+      <>
       {/* SEPARADOR */}
 
       <View className="my-8 flex-row items-center">
@@ -476,6 +480,8 @@ export default function RegisterScreen({ navigation }) {
           Inscrever-se com Google
         </Text>
       </Pressable>
+      </>
+      )}
     </View>
   );
 }

@@ -4,6 +4,7 @@ import { Lock } from "lucide-react-native";
 import { useAuthStore } from "../../store/authStore";
 import { useSubscribe } from "../../hooks/useSubscribe";
 import Button from "../../components/ui/Button";
+import { IN_APP_BILLING } from "../../constants/billing";
 
 function formatPrice(value) {
   if (value == null) return null;
@@ -30,6 +31,8 @@ export default function TrialExpiredScreen({ status }) {
 
   const subtitle = isEmployee
     ? "A assinatura do estabelecimento está com uma pendência. Avise o responsável para regularizar."
+    : !IN_APP_BILLING
+    ? "Sua assinatura não está ativa. Enviamos as instruções para o e-mail da sua conta; depois de regularizar, toque em \"Atualizar\"."
     : reason === "PAYMENT_FAILED"
     ? "Não conseguimos renovar seu pagamento. Regularize para voltar a usar o app."
     : "Assine para continuar gerenciando sua agenda e seus clientes.";
@@ -54,7 +57,7 @@ export default function TrialExpiredScreen({ status }) {
           Seus dados continuam salvos.
         </Text>
 
-        {price && !isEmployee ? (
+        {IN_APP_BILLING && price && !isEmployee ? (
           <View className="mt-6 w-full rounded-2xl border border-gray-200 px-5 py-4">
             <Text className="text-[12px] text-gray-400">
               {teamSize === 1 ? "Plano individual" : `Plano · ${teamSize} profissionais`}
@@ -72,7 +75,7 @@ export default function TrialExpiredScreen({ status }) {
       </View>
 
       <View>
-        {!isEmployee ? (
+        {!isEmployee && IN_APP_BILLING ? (
           <>
             <Button
               title={isConfirming ? "Confirmando pagamento…" : "Assinar agora"}
