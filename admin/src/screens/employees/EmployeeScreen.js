@@ -31,6 +31,7 @@ import { useIsOwner } from "../../hooks/useRole";
 import ErrorState from "../../components/ui/ErrorState";
 import ActionSheet from "../../components/ui/ActionSheet";
 import { EmployeeListSkeleton } from "../../components/skeletons";
+import logger from "../../utils/logger";
 
 export default function EmployeeScreen({ navigation }) {
   const businessStatus = useBusinessStore(
@@ -60,7 +61,7 @@ export default function EmployeeScreen({ navigation }) {
       const response = await getEmployees(businessId);
       setEmployees(response || []);
     } catch (error) {
-      console.log("Erro ao carregar funcionários:", error);
+      logger.log("Erro ao carregar funcionários:", error);
       if (error?.response?.status === 403) setDenied(true);
       else setLoadError(true);
     } finally {
@@ -74,7 +75,7 @@ export default function EmployeeScreen({ navigation }) {
 
   function handleAddEmployee() {
     if (!navigation) {
-      console.log("❌ navigation está undefined");
+      logger.log("❌ navigation está undefined");
       return;
     }
 
@@ -133,7 +134,7 @@ export default function EmployeeScreen({ navigation }) {
         `${employee.name} foi desativado.`
       );
     } catch (error) {
-      console.log(
+      logger.log(
         "❌ Erro ao desativar funcionário:",
         error
       );

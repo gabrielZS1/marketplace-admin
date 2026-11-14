@@ -6,6 +6,7 @@ import {
   View,
 } from "react-native";
 import { ChevronRight, Plus, Tag, UserRound } from "lucide-react-native";
+import logger from "../../utils/logger";
 
 export default function CreateSaleScreen({ navigation }) {
   const [client, setClient] = useState(null);
@@ -15,17 +16,17 @@ export default function CreateSaleScreen({ navigation }) {
 
   function handleAddItem() {
     // Futuramente abrirá a seleção de produto/serviço
-    console.log("Adicionar item");
+    logger.log("Adicionar item");
   }
 
   function handleDiscount() {
     // Futuramente abrirá a configuração do desconto
-    console.log("Adicionar desconto");
+    logger.log("Adicionar desconto");
   }
 
   function handleClient() {
     // Futuramente abrirá a lista de clientes vinda do banco
-    console.log("Selecionar cliente");
+    logger.log("Selecionar cliente");
   }
 
   const hasValue = amount.length > 0;
@@ -187,7 +188,7 @@ export default function CreateSaleScreen({ navigation }) {
           disabled={!hasValue}
           activeOpacity={0.8}
           onPress={() => {
-            console.log({
+            logger.log({
               client,
               amount,
               items,

@@ -1,4 +1,5 @@
 import axios from "axios";
+import logger from "../utils/logger";
 
 const nominatimClient = axios.create({
   baseURL: "https://nominatim.openstreetmap.org",
@@ -44,8 +45,6 @@ export const geocodingApi = {
     if (!cleanQuery || cleanQuery.length < 3) {
       return [];
     }
-
-    console.log("Buscando endereço:", cleanQuery);
 
     try {
       const response = await nominatimClient.get("/search", {
@@ -102,10 +101,7 @@ export const geocodingApi = {
         };
       });
     } catch (error) {
-      console.log("========== ERRO NOMINATIM ==========");
-      console.log("Status:", error.response?.status);
-      console.log("Dados:", error.response?.data);
-      console.log("====================================");
+      logger.warn("Falha na busca de endereço (Nominatim):", error.response?.status);
 
       throw new Error(
         "Não foi possível buscar o endereço agora."

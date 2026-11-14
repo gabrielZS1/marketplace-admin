@@ -9,6 +9,7 @@ import ErrorState from "../../components/ui/ErrorState";
 import { useBusinessStore } from "../../store/businessStore";
 import { scheduleApi } from "../../api/scheduleApi";
 import { IntervalListSkeleton } from "../../components/skeletons";
+import logger from "../../utils/logger";
 
 // "12:00:00" -> "12:00"
 function hhmm(t) {
@@ -37,7 +38,7 @@ export default function IntervalScreen({ navigation }) {
       const data = await scheduleApi.listIntervals(businessId);
       setIntervals(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.log("Erro ao carregar intervalos:", err);
+      logger.log("Erro ao carregar intervalos:", err);
       setError(true);
     } finally {
       setLoading(false);

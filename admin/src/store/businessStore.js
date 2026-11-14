@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { businessApi } from "../api/businessApi";
+import logger from "../utils/logger";
 
 // Deriva se o dono está bloqueado (trial expirado ou pagamento suspenso).
 function isBlocked(status) {
@@ -25,7 +26,7 @@ export const useBusinessStore = create((set, get) => ({
 
       return data;
     } catch (err) {
-      console.log("BUSINESS STATUS ERRO:", err.response?.status, err.response?.data);
+      logger.log("BUSINESS STATUS ERRO:", err.response?.status, err.response?.data);
       set({ isLoading: false });
       throw err;
     }

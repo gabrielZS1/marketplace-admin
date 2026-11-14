@@ -1,6 +1,7 @@
 import React from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { AlertTriangle } from "lucide-react-native";
+import logger from "../utils/logger";
 
 /**
  * Captura qualquer erro de renderização na árvore abaixo e mostra uma tela
@@ -15,7 +16,7 @@ export default class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, info) {
     // Em produção, mandar pro Sentry aqui.
-    console.error("[ErrorBoundary]", error, info?.componentStack);
+    logger.error("[ErrorBoundary]", error, info?.componentStack);
   }
 
   handleRetry = () => {

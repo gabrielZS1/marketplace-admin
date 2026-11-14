@@ -38,6 +38,15 @@ apiClient.interceptors.response.use(
         .catch(() => {});
     }
 
+    // Senha temporária ainda não trocada: o app mostra a tela de troca de senha.
+    if (error.response?.status === 403 && data?.error === "PASSWORD_CHANGE_REQUIRED") {
+      import("../store/authStore")
+        .then(({ useAuthStore }) => {
+          useAuthStore.getState().requirePasswordChange();
+        })
+        .catch(() => {});
+    }
+
     const message = data?.message || "Erro de conexão. Tente novamente.";
     return Promise.reject({ ...error, message });
   }

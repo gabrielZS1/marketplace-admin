@@ -29,6 +29,7 @@ import { mediaUrl } from "../../utils/mediaUrl";
 
 import BusinessSettingsMenu from "./BusinessSettingsMenu";
 import Skeleton from "../../components/ui/Skeleton";
+import logger from "../../utils/logger";
 
 function buildChecklist(details, services, employees) {
   return [
@@ -100,7 +101,7 @@ export default function ProfileScreen({ navigation }) {
         setEmployees(Array.isArray(emp) ? emp : []);
       }
     } catch (err) {
-      console.log("Erro ao carregar perfil:", err);
+      logger.log("Erro ao carregar perfil:", err);
     } finally {
       setIsLoading(false);
     }
