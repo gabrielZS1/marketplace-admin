@@ -21,7 +21,8 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://glowly-backend-fkqe.onrender.com/api",
-        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "EXPO_PUBLIC_IN_APP_BILLING": "false"
       }
     },
     "production": {
@@ -29,7 +30,8 @@
       "channel": "production",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://glowly-backend-fkqe.onrender.com/api",
-        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "EXPO_PUBLIC_IN_APP_BILLING": "false"
       }
     }
   },
