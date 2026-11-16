@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { ChevronLeft, MailCheck } from "lucide-react-native";
 import { useAuthStore } from "../../store/authStore";
+import AuthScroll from "../../components/AuthScroll";
 
 export default function VerifyEmailScreen({ navigation }) {
   const user = useAuthStore((state) => state.user);
@@ -55,7 +56,7 @@ export default function VerifyEmailScreen({ navigation }) {
   }
 
   return (
-    <View className="flex-1 bg-white px-6 pt-16">
+    <AuthScroll>
       <TouchableOpacity
         onPress={() => navigation.goBack()}
         className="mb-8 flex-row items-center"
@@ -128,6 +129,6 @@ export default function VerifyEmailScreen({ navigation }) {
           {isResending ? "Reenviando..." : "Reenviar código"}
         </Text>
       </TouchableOpacity>
-    </View>
+    </AuthScroll>
   );
 }

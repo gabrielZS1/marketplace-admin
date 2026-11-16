@@ -64,7 +64,8 @@ export default function TrialExpiredScreen({ status }) {
     : isEmployee
     ? "A assinatura do estabelecimento está com uma pendência. Avise o responsável para regularizar."
     : !IN_APP_BILLING
-    ? "Sua assinatura não está ativa. Enviamos as instruções para o e-mail da sua conta; depois de regularizar, toque em \"Atualizar\"."
+    ? // Sem convite para pagar fora do app (regra das lojas): só o status.
+      "Sua assinatura não está ativa no momento. Quando ela for regularizada, toque em \"Atualizar\"."
     : reason === "PAYMENT_FAILED"
     ? "Não conseguimos renovar seu pagamento. Regularize para voltar a usar o app."
     : "Assine para continuar gerenciando sua agenda e seus clientes.";

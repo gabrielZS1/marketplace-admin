@@ -8,9 +8,12 @@ import {
   Pressable,
   Image,
   Platform,
+  KeyboardAvoidingView,
+  ScrollView,
 } from "react-native";
 import { Mail, Eye, EyeOff, Check } from "lucide-react-native";
 import { useAuthStore } from "../../store/authStore";
+import useScreenScale from "../../hooks/useScreenScale";
 import { openLegal } from "../../constants/legal";
 import TurnstileWidget, {
   isTurnstileConfigured,
@@ -25,6 +28,7 @@ const MAX_PASSWORD_LENGTH = 64;
 const EMAIL_REGEX = /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 
 export default function RegisterScreen({ navigation }) {
+  const { s, insets } = useScreenScale();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -241,10 +245,23 @@ export default function RegisterScreen({ navigation }) {
     !isLoading;
 
   return (
-    <View className="flex-1 bg-white px-6 pt-16">
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      className="flex-1 bg-white"
+    >
+    <ScrollView
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{
+        flexGrow: 1,
+        paddingHorizontal: 24,
+        paddingTop: Math.max(insets.top + 12, s(64)),
+        paddingBottom: insets.bottom + 24,
+      }}
+    >
       {/* TOGGLE */}
 
-      <View className="mb-10 flex-row rounded-full bg-gray-100 p-1">
+      <View className="flex-row rounded-full bg-gray-100 p-1" style={{ marginBottom: s(40, 20) }}>
 
         
         <TouchableOpacity
@@ -268,16 +285,15 @@ export default function RegisterScreen({ navigation }) {
 
       
 
-      <Text className="mb-8 text-center text-2xl font-semibold">
+      <Text className="text-center text-2xl font-semibold" style={{ marginBottom: s(32, 12) }}>
         Criar uma conta
       </Text>
 
       <Image
             source={require("../../../assets/img/login.png")}
             style={{
-             
               width: "100%",
-              height: 250,
+              height: s(250, 110),
             }}
             resizeMode="contain"
           />
@@ -482,6 +498,7 @@ export default function RegisterScreen({ navigation }) {
       </Pressable>
       </>
       )}
-    </View>
+    </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

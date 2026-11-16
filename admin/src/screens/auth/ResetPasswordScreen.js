@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { ChevronLeft, Eye, EyeOff } from "lucide-react-native";
 import { authApi } from "../../api/authApi";
+import AuthScroll from "../../components/AuthScroll";
 
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_PASSWORD_LENGTH = 64;
@@ -74,7 +75,7 @@ export default function ResetPasswordScreen({ navigation, route }) {
     !isLoading;
 
   return (
-    <View className="flex-1 bg-white px-6 pt-16">
+    <AuthScroll>
       <TouchableOpacity
         onPress={() => navigation.goBack()}
         className="mb-8 flex-row items-center"
@@ -177,6 +178,6 @@ export default function ResetPasswordScreen({ navigation, route }) {
           </Text>
         )}
       </TouchableOpacity>
-    </View>
+    </AuthScroll>
   );
 }
