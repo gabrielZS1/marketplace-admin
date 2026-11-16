@@ -78,7 +78,7 @@ export default function TeamSizeScreen({ navigation }) {
             ? chosen
               ? `Após o período de teste: R$ ${chosen.price},00 por mês. Você só paga quando o teste acabar.`
               : "Você tem um período de teste gratuito antes de qualquer cobrança."
-            : "Você começa com um período de teste gratuito. Dá para mudar o plano depois."}
+            : "Escolha quantos profissionais vão usar o Glowly. Dá para mudar depois."}
         </Text>
       </View>
 
