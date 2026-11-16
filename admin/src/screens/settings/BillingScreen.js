@@ -83,7 +83,7 @@ export default function BillingScreen({ navigation }) {
   const busy = isLoading || isConfirming;
 
   return (
-    <Screen navigation={navigation} title="Plano e cobrança">
+    <Screen navigation={navigation} title="Plano">
       {/* STATUS */}
       <View className={`flex-row items-center rounded-2xl ${meta.bg} px-4 py-4`}>
         <meta.Icon size={22} color={meta.color} strokeWidth={2} />

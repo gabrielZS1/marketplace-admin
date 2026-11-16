@@ -51,7 +51,7 @@ const OWNER_SECTIONS = [
   {
     title: "Assinatura",
     items: [
-      { label: "Plano e cobrança", hint: "Seu plano e quantidade de profissionais", icon: CreditCard, target: "Billing" },
+      { label: "Plano", hint: "Seu plano e quantidade de profissionais", icon: CreditCard, target: "Billing" },
     ],
   },
 ];
