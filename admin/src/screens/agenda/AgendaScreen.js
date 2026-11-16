@@ -36,6 +36,7 @@ import { AgendaBlocksSkeleton } from "../../components/skeletons";
 
 import NotificationsModal from "./NotificationsModal";
 import DateOptionsModal from "./DateOptionsModal";
+import logger from "../../utils/logger";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const SIDEBAR_WIDTH = 44;
@@ -62,7 +63,7 @@ function shortTime(d) {
   return `${d.getHours()}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
-export default function AgendaScreen({ navigation }) {
+export default function AgendaScreen({ navigation, route }) {
   const businessId = useBusinessStore((state) => state.status?.id);
   const topPad = useContentTopPadding();
   const isOwner = useIsOwner();
@@ -73,6 +74,16 @@ export default function AgendaScreen({ navigation }) {
   const [updatingId, setUpdatingId] = useState(null);
   const [now, setNow] = useState(getBrasiliaNow());
   const [selectedDate, setSelectedDate] = useState(getBrasiliaNow());
+
+  // Aberta por uma notificação: vai direto para o dia do agendamento.
+  const requestedDate = route?.params?.date;
+  useEffect(() => {
+    if (!requestedDate) return;
+    const d = new Date(requestedDate);
+    if (!Number.isNaN(d.getTime())) setSelectedDate(d);
+    // limpa o parâmetro para que um novo toque no mesmo dia funcione de novo
+    navigation.setParams({ date: undefined });
+  }, [requestedDate]);
   const [appointments, setAppointments] = useState([]);
   const [timeBlocks, setTimeBlocks] = useState([]);
   const [timeOffs, setTimeOffs] = useState([]);
@@ -115,7 +126,7 @@ export default function AgendaScreen({ navigation }) {
       .listByBusiness(businessId)
       .then(setAppointments)
       .catch((error) => {
-        console.error("Erro ao carregar agendamentos:", error);
+        logger.error("Erro ao carregar agendamentos:", error);
       });
   }
 
@@ -135,7 +146,7 @@ export default function AgendaScreen({ navigation }) {
       .listByBusiness(businessId)
       .then(setAppointments)
       .catch((error) => {
-        console.error("Erro ao carregar agendamentos:", error);
+        logger.error("Erro ao carregar agendamentos:", error);
       })
       .finally(() => {
         setIsLoading(false);
@@ -214,7 +225,7 @@ export default function AgendaScreen({ navigation }) {
         ),
       );
     } catch (error) {
-      console.error("Erro ao confirmar agendamento:", error);
+      logger.error("Erro ao confirmar agendamento:", error);
     } finally {
       setUpdatingId(null);
     }
@@ -242,7 +253,7 @@ export default function AgendaScreen({ navigation }) {
         ),
       );
     } catch (error) {
-      console.error("Erro ao cancelar agendamento:", error);
+      logger.error("Erro ao cancelar agendamento:", error);
     } finally {
       setUpdatingId(null);
     }

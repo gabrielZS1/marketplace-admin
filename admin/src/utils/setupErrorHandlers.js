@@ -1,3 +1,4 @@
+import logger from "./logger";
 /**
  * Handler global para erros de JS não capturados (fora do ciclo de render — ex:
  * dentro de um onPress ou de uma promise). O ErrorBoundary cuida dos erros de
@@ -9,9 +10,9 @@ export function setupErrorHandlers() {
   const defaultHandler = ErrorUtils.getGlobalHandler?.();
 
   ErrorUtils.setGlobalHandler((error, isFatal) => {
-    console.error("[GlobalError]", isFatal ? "(fatal)" : "", error);
+    logger.error("[GlobalError]", isFatal ? "(fatal)" : "", error);
 
-    // Em produção: reportar pro Sentry aqui.
+    // Em produção, logger.error envia o erro ao Sentry (se configurado).
 
     // Em desenvolvimento, mantém a redbox (ajuda a achar o bug).
     if (__DEV__ && defaultHandler) {

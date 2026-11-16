@@ -16,6 +16,7 @@ import ErrorState from "../../components/ui/ErrorState";
 import { StatsSkeleton } from "../../components/skeletons";
 import { businessApi } from "../../api/businessApi";
 import { statsApi } from "../../api/statsApi";
+import logger from "../../utils/logger";
 
 const PERIODS = [
   { days: 7, label: "7 dias" },
@@ -103,7 +104,7 @@ export default function StatsScreen({ navigation }) {
         const stats = await statsApi.get(bId, d);
         setData(stats);
       } catch (err) {
-        console.log("Erro nas estatísticas:", err);
+        logger.log("Erro nas estatísticas:", err);
         setError(true);
       } finally {
         setIsLoading(false);

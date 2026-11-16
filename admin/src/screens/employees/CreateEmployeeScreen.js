@@ -18,6 +18,7 @@ import {
 } from "lucide-react-native";
 
 import { createEmployee } from "../../api/employeeApi";
+import logger from "../../utils/logger";
 
 export default function CreateEmployeeScreen({ navigation, route }) {
   const businessId = route?.params?.businessId;
@@ -279,7 +280,7 @@ export default function CreateEmployeeScreen({ navigation, route }) {
         ]
       );
     } catch (error) {
-      console.log(
+      logger.log(
         "Erro ao criar funcionário:",
         error
       );

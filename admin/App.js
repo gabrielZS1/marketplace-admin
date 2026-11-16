@@ -8,7 +8,10 @@ import IntroSplash from "./src/components/IntroSplash";
 import RootNavigator from "./src/navigation/RootNavigator";
 import { setupErrorHandlers } from "./src/utils/setupErrorHandlers";
 import { configureGoogleSignIn } from "./src/services/googleSignIn";
+import { initMonitoring } from "./src/services/monitoring";
 
+// Relatório de falhas: só liga em produção e com EXPO_PUBLIC_SENTRY_DSN configurado.
+initMonitoring();
 setupErrorHandlers();
 configureGoogleSignIn();
 

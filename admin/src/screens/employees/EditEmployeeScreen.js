@@ -20,6 +20,7 @@ import {
 import { updateEmployee, resetEmployeePassword } from "../../api/employeeApi";
 import { getEmployeeWorkingHours } from "../../api/workingHourApi";
 import { HourRowsSkeleton } from "../../components/skeletons";
+import logger from "../../utils/logger";
 
 export default function EditEmployeeScreen({ navigation, route }) {
   const businessId = route?.params?.businessId;
@@ -59,14 +60,14 @@ export default function EditEmployeeScreen({ navigation, route }) {
           employee.id
         );
 
-        console.log(
+        logger.log(
           "🕐 Horários do funcionário:",
           hours
         );
 
         setWorkingHours(hours || []);
       } catch (error) {
-        console.log(
+        logger.log(
           "❌ Erro ao carregar horários:",
           error
         );
@@ -182,7 +183,7 @@ export default function EditEmployeeScreen({ navigation, route }) {
         ]
       );
     } catch (error) {
-      console.log(
+      logger.log(
         "❌ Erro ao atualizar funcionário:",
         error
       );

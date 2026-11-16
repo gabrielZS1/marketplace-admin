@@ -3,6 +3,12 @@
     "name": "Glowly Business",
     "slug": "admin",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/3c3e29a3-30ee-4a69-967c-10569a63597d"
+    },
     "orientation": "portrait",
     "icon": "./assets/img/iconnot.png",
     "userInterfaceStyle": "light",
@@ -50,7 +56,8 @@
           "photosPermission": "Permita o acesso às suas fotos para escolher a logo ou fotos do estabelecimento."
         }
       ],
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      "@sentry/react-native"
     ],
     "extra": {
       "eas": {

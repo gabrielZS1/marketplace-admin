@@ -5,10 +5,13 @@ import AuthStack from "./AuthStack";
 import OnboardingStack from "./OnboardingStack";
 import AdminTabs from "./AdminTabs";
 import TrialExpiredScreen from "../screens/subscription/TrialExpiredScreen";
+import ForceChangePasswordScreen from "../screens/auth/ForceChangePasswordScreen";
 import SubscriptionBanner from "../components/SubscriptionBanner";
 import ErrorBoundary from "../components/ErrorBoundary";
 import { useAuthStore } from "../store/authStore";
 import { useBusinessStore } from "../store/businessStore";
+import { navigationRef } from "./navigationRef";
+import { useNotificationNavigation } from "../hooks/useNotificationNavigation";
 
 function isBlocked(status) {
   if (!status) return false;
@@ -20,6 +23,9 @@ function isBlocked(status) {
 }
 
 function AppShell() {
+  // Toque numa notificação de novo agendamento abre a Agenda no dia certo.
+  useNotificationNavigation();
+
   return (
     <View className="flex-1">
       <SubscriptionBanner />
@@ -34,6 +40,7 @@ export default function RootNavigator({ onBootReady }) {
 
   const token = useAuthStore((state) => state.token);
   const role = useAuthStore((state) => state.user?.role);
+  const mustChangePassword = useAuthStore((state) => !!state.user?.mustChangePassword);
   const logout = useAuthStore((state) => state.logout);
   const restoreSession = useAuthStore((state) => state.restoreSession);
 
@@ -74,6 +81,9 @@ export default function RootNavigator({ onBootReady }) {
   function renderContent() {
     if (!token) return <AuthStack />;
 
+    // Senha temporária (criada pelo dono): troca antes de qualquer outra coisa.
+    if (mustChangePassword) return <ForceChangePasswordScreen />;
+
     const isEmployee = role === "EMPLOYEE" || businessStatus?.role === "EMPLOYEE";
 
     if (isEmployee) {
@@ -112,7 +122,7 @@ export default function RootNavigator({ onBootReady }) {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       <ErrorBoundary>{renderContent()}</ErrorBoundary>
     </NavigationContainer>
   );

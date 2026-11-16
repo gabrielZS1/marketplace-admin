@@ -24,6 +24,7 @@ import { useBusinessStore } from "../../store/businessStore";
 import { useContentTopPadding } from "../../hooks/useContentTopPadding";
 import Skeleton from "../../components/ui/Skeleton";
 import { UpcomingAppointmentsSkeleton } from "../../components/skeletons";
+import logger from "../../utils/logger";
 
 export default function OverviewScreen({ navigation, route }) {
   const storeBusinessId = useBusinessStore((state) => state.status?.id);
@@ -52,7 +53,7 @@ export default function OverviewScreen({ navigation, route }) {
       setAppointments(appointmentsResponse.data || []);
       setEmployees(employeesResponse || []);
     } catch (error) {
-      console.log(
+      logger.log(
         "Erro ao carregar visão geral:",
         error
       );

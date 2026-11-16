@@ -19,6 +19,7 @@ import { clientApi } from "../../api/clientApi";
 import { mediaUrl } from "../../utils/mediaUrl";
 import ErrorState from "../../components/ui/ErrorState";
 import { ClientListSkeleton } from "../../components/skeletons";
+import logger from "../../utils/logger";
 
 export default function ClientsScreen({ navigation }) {
   const businessId = useBusinessStore((state) => state.status?.id);
@@ -42,7 +43,7 @@ export default function ClientsScreen({ navigation }) {
       const result = await clientApi.listByBusiness(businessId);
       setClients(Array.isArray(result) ? result : []);
     } catch (error) {
-      console.log("Erro ao carregar clientes:", error);
+      logger.log("Erro ao carregar clientes:", error);
       if (error?.response?.status === 403) setDenied(true);
       else setLoadError(true);
     } finally {

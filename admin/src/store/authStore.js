@@ -5,6 +5,7 @@ import { secureStorage } from "../utils/secureStorage";
 import { signInWithGoogle } from "../services/googleSignIn";
 import { registerForPushNotificationsAsync } from "../../pushNotifications";
 import { getNotificationsEnabled } from "../utils/notificationPref";
+import logger from "../utils/logger";
 
 const ALLOWED_ROLES = ["BUSINESS_OWNER", "EMPLOYEE"];
 
@@ -23,10 +24,10 @@ export async function setupPushNotifications() {
       // Dono recém-cadastrado ainda não tem estabelecimento (onboarding pendente).
       // Não é erro — o token é registrado de novo quando o negócio existir.
       if (err?.response?.status === 404) return;
-      console.warn("Não foi possível registrar o token de push:", err?.message);
+      logger.warn("Não foi possível registrar o token de push:", err?.message);
     }
   } catch (err) {
-    console.warn("Push notifications indisponíveis:", err?.message);
+    logger.warn("Push notifications indisponíveis:", err?.message);
   }
 }
 
@@ -57,6 +58,7 @@ export const useAuthStore = create((set, get) => ({
           role: response.role,
           address: response.address,
           emailVerified: response.emailVerified,
+          mustChangePassword: !!response.mustChangePassword,
         },
         token: response.token,
         isLoading: false,
@@ -103,6 +105,7 @@ export const useAuthStore = create((set, get) => ({
           role: response.role,
           address: response.address,
           emailVerified: response.emailVerified,
+          mustChangePassword: !!response.mustChangePassword,
         },
         token: response.token,
         isLoading: false,
@@ -140,6 +143,7 @@ export const useAuthStore = create((set, get) => ({
           role: response.role,
           address: response.address,
           emailVerified: response.emailVerified,
+          mustChangePassword: !!response.mustChangePassword,
         },
         token: response.token,
         isLoading: false,
@@ -166,6 +170,21 @@ export const useAuthStore = create((set, get) => ({
 
   async resendVerification() {
     await authApi.resendVerification();
+  },
+
+  // Funcionário entrou com a senha criada pelo dono: troca agora e libera o app.
+  async changeTemporaryPassword(currentPassword, newPassword) {
+    await authApi.changePassword({ currentPassword, newPassword });
+    set((state) => ({
+      user: state.user ? { ...state.user, mustChangePassword: false } : state.user,
+    }));
+  },
+
+  // O servidor recusou uma chamada porque a senha ainda é temporária (ex.: sessão antiga).
+  requirePasswordChange() {
+    set((state) => ({
+      user: state.user ? { ...state.user, mustChangePassword: true } : state.user,
+    }));
   },
 
   async logout() {
@@ -201,6 +220,7 @@ export const useAuthStore = create((set, get) => ({
           role: me.role,
           address: me.address,
           emailVerified: me.emailVerified,
+          mustChangePassword: !!me.mustChangePassword,
         },
         isLoading: false,
       });
