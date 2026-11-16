@@ -38,9 +38,12 @@ export default function ChangePlanScreen({ navigation }) {
   const isUpgrade = chosen && chosen.value > currentSize;
 
   const isTrial = subscriptionStatus === "TRIAL";
-  const effectNote = isTrial
-    ? "Você está no período de teste. A mudança passa a valer para a assinatura quando você assinar."
-    : "O limite de profissionais muda agora; a assinatura acompanha a mudança a partir do próximo ciclo.";
+  const effectNote =
+    subscriptionStatus === "FREE"
+      ? "O limite de profissionais muda agora."
+      : isTrial
+      ? "Você está no período de teste. A mudança passa a valer para a assinatura quando você assinar."
+      : "O limite de profissionais muda agora; a assinatura acompanha a mudança a partir do próximo ciclo.";
 
   function confirm() {
     if (!chosen || saving) return;

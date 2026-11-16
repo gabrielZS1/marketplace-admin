@@ -61,8 +61,8 @@ export default function CompleteScreen({ navigation }) {
 
         <Text className="mt-2 text-center text-[13px] leading-5 text-gray-500">
           {done
-            ? "Seu período de teste está ativo. Configure seus serviços e sua agenda — a cobrança só começa quando o teste acabar."
-            : "Vamos finalizar seu cadastro e liberar o período de teste gratuito."}
+            ? "Seu estabelecimento está pronto. Configure seus serviços e sua agenda."
+            : "Vamos finalizar seu cadastro."}
         </Text>
 
         {promoCode && !done ? (

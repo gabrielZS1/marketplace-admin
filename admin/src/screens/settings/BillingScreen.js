@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { CheckCircle2, Clock, AlertTriangle } from "lucide-react-native";
+import { CheckCircle2, Clock, AlertTriangle, Gift } from "lucide-react-native";
 import dayjs from "dayjs";
 
 import { useBusinessStore } from "../../store/businessStore";
@@ -35,6 +35,14 @@ export default function BillingScreen({ navigation }) {
   const teamSize = status?.teamSize;
 
   const meta = {
+    // Modo gratuito (servidor com a cobrança desligada).
+    FREE: {
+      Icon: Gift,
+      color: "#16A34A",
+      bg: "bg-green-50",
+      title: "Gratuito",
+      line: "O Glowly está sem custo por enquanto.",
+    },
     TRIAL: {
       Icon: Clock,
       color: "#111827",
@@ -109,7 +117,7 @@ export default function BillingScreen({ navigation }) {
         )}
       </View>
 
-      {st === "TRIAL" || st === "ACTIVE" || st === "PAST_DUE" ? (
+      {st === "FREE" || st === "TRIAL" || st === "ACTIVE" || st === "PAST_DUE" ? (
         <View className="mt-3">
           <Button
             title="Trocar plano"

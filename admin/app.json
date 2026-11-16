@@ -10,7 +10,7 @@
       "url": "https://u.expo.dev/3c3e29a3-30ee-4a69-967c-10569a63597d"
     },
     "orientation": "portrait",
-    "icon": "./assets/img/iconnot.png",
+    "icon": "./assets/img/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
@@ -26,8 +26,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/img/iconapp.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/img/icon.png",
+        "backgroundColor": "#161616"
       },
       "edgeToEdgeEnabled": true,
       "package": "app.glowly.negocios",
